@@ -80,8 +80,7 @@ func (h *Chronos) HandleIssueEvent() error {
 		fmt.Println(fmt.Sprintf("Event: Issue %d has been %s", event.GetIssue().GetNumber(), event.GetAction()))
 		fmt.Println("Label:", event.GetLabel().GetName())
 		query := ""
-		repo.Issues(query)
-
+		repo.GetIssues(query)
 	default:
 		fmt.Println("Event: Issue", event.GetAction())
 		return nil
@@ -107,7 +106,16 @@ func (h *Chronos) HandlePingEvent() error {
 	return nil
 }
 
-type Issues map[string]interface{}
+type Issues struct {
+	ID     int
+	Number int
+	Labels []Label
+}
+
+type Label struct {
+	ID   int
+	Name string
+}
 
 type Repo struct {
 	name   *string
@@ -135,14 +143,17 @@ func (h Repo) GetIssues(query string) error {
 		SetBasicAuth(os.Getenv("CHRONOS_GITHUB_LOGIN"), os.Getenv("CHRONOS_GITHUB_PASSWORD")).
 		Get(fullURL.String())
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
-	issues := make(map[string]interface{})
+	var issues interface{}
 	err = json.Unmarshal(resp.Body(), &issues)
 	if err != nil {
 		return err
 	}
+
+	log.Println(fmt.Sprintf("%+v", issues))
 
 	return nil
 }
