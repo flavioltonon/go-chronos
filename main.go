@@ -1,11 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
 
+	"github.com/go-resty/resty"
 	"github.com/google/go-github/github"
+)
+
+const (
+	GITHUB_API_URL = "https://api.github.com"
+	OWNER          = "flavioltonon"
+	REPO           = "go-chronos"
 )
 
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
@@ -57,20 +67,35 @@ type Chronos struct {
 }
 
 func (h *Chronos) HandleIssueEvent() error {
+	var repo Repo
+
 	event := h.event.(*github.IssuesEvent)
-	fmt.Println("got webhook payload: ", *event.Action)
+	switch event.GetAction() {
+	case "opened":
+		fmt.Println("Event: Issue", event.GetAction())
+	case "labeled":
+		fmt.Println(fmt.Sprintf("Event: Issue %d has been %s", event.GetIssue().GetNumber(), event.GetAction()))
+		fmt.Println("Label:", event.GetLabel().GetName())
+	case "unlabeled":
+		fmt.Println(fmt.Sprintf("Event: Issue %d has been %s", event.GetIssue().GetNumber(), event.GetAction()))
+		fmt.Println("Label:", event.GetLabel().GetName())
+		query := ""
+		repo.Issues(query)
+
+	default:
+		fmt.Println("Event: Issue", event.GetAction())
+		return nil
+	}
 	return nil
 }
 
 func (h *Chronos) HandleProjectCardEvent() error {
 	event := h.event.(*github.ProjectCardEvent)
-	switch *event.Action {
+	switch event.GetAction() {
 	case "moved":
-		fmt.Println("got webhook payload: ", *event.Action)
-		fmt.Println("who: ", *event.ProjectCard.URL)
-		fmt.Println("from: ", *event.Changes.Note.From)
-		fmt.Println("to: ", *event.ProjectCard.ColumnID)
+		fmt.Println(fmt.Sprintf("Event: Project card %d has been %s to column %d", event.GetProjectCard().GetID(), event.GetAction(), event.GetProjectCard().GetColumnID()))
 	default:
+		fmt.Println(fmt.Sprintf("Event: Project card", event.GetAction()))
 		return nil
 	}
 	return nil
@@ -78,6 +103,46 @@ func (h *Chronos) HandleProjectCardEvent() error {
 
 func (h *Chronos) HandlePingEvent() error {
 	event := h.event.(*github.PingEvent)
-	fmt.Println("got webhook payload: ", *event.Zen)
+	fmt.Println("Event: Ping received.\nZen message:", event.GetZen())
+	return nil
+}
+
+type Issues map[string]interface{}
+
+type Repo struct {
+	name   *string
+	issues *Issues
+}
+
+func NewRepo(name string) Repo {
+	return Repo{
+		name: &name,
+	}
+}
+
+func (h Repo) Name() string {
+	return *h.name
+}
+
+func (h Repo) Issues() Issues {
+	return *h.issues
+}
+
+func (h Repo) GetIssues(query string) error {
+	u, _ := url.Parse(fmt.Sprintf("%s/repos/%s/%s/issues", GITHUB_API_URL, OWNER, REPO))
+	fullURL, _ := u.Parse(query)
+	resp, err := resty.R().
+		SetBasicAuth(os.Getenv("CHRONOS_GITHUB_LOGIN"), os.Getenv("CHRONOS_GITHUB_PASSWORD")).
+		Get(fullURL.String())
+	if err != nil {
+		return err
+	}
+
+	issues := make(map[string]interface{})
+	err = json.Unmarshal(resp.Body(), &issues)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
