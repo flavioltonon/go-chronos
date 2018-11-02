@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/go-resty/resty"
 )
 
 func (h Repo) GetLabels() error {
 	resp, err := resty.R().
-		SetBasicAuth(CHRONOS_GITHUB_LOGIN, CHRONOS_GITHUB_PASSWORD).
+		SetBasicAuth(os.Getenv("CHRONOS_GITHUB_LOGIN"), os.Getenv("CHRONOS_GITHUB_PASSWORD")).
 		Get(fmt.Sprintf("%s/repos/%s/%s/labels", GITHUB_API_URL, OWNER, REPO))
 	if err != nil {
 		log.Println(err)

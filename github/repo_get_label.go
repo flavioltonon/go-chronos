@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"os"
 
 	"github.com/go-resty/resty"
 )
@@ -14,7 +15,7 @@ func (h Repo) GetLabel(labelName string) error {
 	fullURL, _ := u.Parse(labelName)
 
 	resp, err := resty.R().
-		SetBasicAuth(CHRONOS_GITHUB_LOGIN, CHRONOS_GITHUB_PASSWORD).
+		SetBasicAuth(os.Getenv("CHRONOS_GITHUB_LOGIN"), os.Getenv("CHRONOS_GITHUB_PASSWORD")).
 		Get(fullURL.String())
 	if err != nil {
 		return ErrUnableToSendGetLabelRequest
