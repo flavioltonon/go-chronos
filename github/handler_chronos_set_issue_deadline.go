@@ -23,37 +23,66 @@ type ChronosSetIssueDeadlineResponse struct {
 }
 
 func (r *ChronosSetIssueDeadlineRequest) calculateElapsedTime() error {
-	r.elapsedTime = time.Now().Sub(r.Created).Hours()
+	var nonWorkHours float64
+
+	now := time.Now()
+	_, offset := now.Zone()
+	nowUTC := now.Add(time.Duration(offset) * time.Second).UTC()
+	elapsedTime := int(math.Round(nowUTC.Sub(r.Created).Hours()))
+
+	for t := 0; t < elapsedTime; t++ {
+		if r.Created.Add(time.Duration(t)*time.Hour).Weekday() == 0 { // Sunday
+			nonWorkHours++
+			continue
+		}
+
+		if r.Created.Add(time.Duration(t)*time.Hour).Weekday() == 6 { // Saturday
+			nonWorkHours++
+			continue
+		}
+
+		if r.Created.Add(time.Duration(t)*time.Hour).Hour() < 12 {
+			nonWorkHours++
+			continue
+		}
+		if r.Created.Add(time.Duration(t)*time.Hour).Hour() >= 21 {
+			nonWorkHours++
+			continue
+		}
+	}
+
+	r.elapsedTime = nowUTC.Sub(r.Created).Hours() - nonWorkHours
+
 	return nil
 }
 
 func (r *ChronosSetIssueDeadlineRequest) defineTimer() error {
-	var daysElapsed = math.Round(r.elapsedTime / 24.0)
-	var hoursElapsed = math.Round(r.elapsedTime)
+	var deadline string
+
+	timeTable := make(map[string]float64)
+	timeTable["horas"] = r.elapsedTime
+	timeTable["dias"] = r.elapsedTime / 24.0
+
 	switch r.Label {
 	case "Prioridade: Baixa":
-		if daysElapsed > 60 {
-			r.overdue = true
-		}
-		r.timer = strconv.FormatFloat(60-daysElapsed, 'f', -1, 64) + " dias"
+		deadline = DEADLINE_PRIORIDADE_BAIXA
 	case "Prioridade: Média":
-		if daysElapsed > 15 {
-			r.overdue = true
-		}
-		r.timer = strconv.FormatFloat(15-daysElapsed, 'f', -1, 64) + " dias"
+		deadline = DEADLINE_PRIORIDADE_MEDIA
 	case "Prioridade: Alta":
-		if daysElapsed > 3 {
-			r.overdue = true
-		}
-		r.timer = strconv.FormatFloat(3-daysElapsed, 'f', -1, 64) + " dias"
+		deadline = DEADLINE_PRIORIDADE_ALTA
 	case "Prioridade: Muito Alta":
-		if hoursElapsed > 24 {
-			r.overdue = true
-		}
-		r.timer = strconv.FormatFloat(24-hoursElapsed, 'f', -1, 64) + " horas"
+		deadline = DEADLINE_PRIORIDADE_MUITO_ALTA
 	default:
 		return ErrUnableToDefineTimer
 	}
+
+	deadlineTime, _ := strconv.ParseFloat(strings.Split(deadline, " ")[0], 64)
+	deadlineType := strings.Split(deadline, " ")[1]
+	if timeTable[deadlineType] > deadlineTime {
+		r.overdue = true
+	}
+	r.timer = strconv.FormatFloat(deadlineTime-math.Round(timeTable[deadlineType]), 'f', -1, 64) + " " + deadlineType
+
 	return nil
 }
 
@@ -63,11 +92,12 @@ func (r *ChronosSetIssueDeadlineRequest) createLabel() error {
 		newLabel string
 	)
 
+	newLabel = fmt.Sprintf("Prazo: %s", r.timer)
+
 	if r.overdue {
 		newLabel = "Overdue"
-	} else {
-		newLabel = fmt.Sprintf("Prazo: %s", r.timer)
 	}
+
 	err := repo.GetLabel(newLabel)
 	if err != nil {
 		err := repo.CreateLabel(newLabel)
