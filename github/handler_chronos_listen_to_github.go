@@ -3,12 +3,13 @@ package github
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/google/go-github/github"
 )
 
 func (h Chronos) ListenToGitHub(w http.ResponseWriter, r *http.Request) {
-	payload, err := github.ValidatePayload(r, []byte(GITHUB_WEBHOOK_SECRET))
+	payload, err := github.ValidatePayload(r, []byte(os.Getenv("GITHUB_WEBHOOK_SECRET")))
 	if err != nil {
 		log.Printf("error validating request body: err=%s\n", err)
 		return
