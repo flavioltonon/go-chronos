@@ -8,7 +8,16 @@ import (
 	"github.com/google/go-github/github"
 )
 
+type ChronosUpdateIssuesDeadlinesRequest struct {
+	issues []*github.Issue
+}
+
+type ChronosUpdateIssuesDeadlinesResponse struct {
+}
+
 func (h *Chronos) getIssues() error {
+	var req = h.request.(ChronosUpdateIssuesDeadlinesRequest)
+
 	issues, _, err := h.client.Issues.ListByRepo(context.Background(), OWNER, REPO, &github.IssueListByRepoOptions{
 		State: "open",
 	})
@@ -16,18 +25,20 @@ func (h *Chronos) getIssues() error {
 		return ErrUnableToGetIssuesFromRepo
 	}
 
-	h.issues = issues
+	req.issues = issues
+	h.request = req
 
 	return nil
 }
 
 func (h *Chronos) updateIssuesDeadlineLabels() error {
 	var (
+		req = h.request.(ChronosUpdateIssuesDeadlinesRequest)
 		wg  sync.WaitGroup
 		err error
 	)
 
-	for _, issue := range h.issues {
+	for _, issue := range req.issues {
 		var (
 			labels []string
 		)

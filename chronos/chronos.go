@@ -7,19 +7,12 @@ type Chronos struct {
 	client *github.Client
 
 	request interface{}
-
-	holidays Holidays
-
-	issue  *github.Issue
-	issues []*github.Issue
-
-	newLabel *github.Label
-	labels   []*github.Label
-
-	timer   string
-	overdue bool
 }
 
 func (h *Chronos) SetClient(client *github.Client) {
 	h.client = client
+}
+
+func (h *Chronos) SetRequest(request interface{}) {
+	h.request = request
 }

@@ -9,15 +9,17 @@ import (
 )
 
 func main() {
-	var chronos chronos.Chronos
+	var c chronos.Chronos
 
 	auth := github.BasicAuthTransport{
 		Username: os.Getenv("CHRONOS_GITHUB_LOGIN"),
 		Password: os.Getenv("CHRONOS_GITHUB_PASSWORD"),
 	}
-	chronos.SetClient(github.NewClient(auth.Client()))
+	c.SetClient(github.NewClient(auth.Client()))
 
-	err := chronos.UpdateIssuesDeadlines()
+	c.SetRequest(chronos.ChronosUpdateIssuesDeadlinesRequest{})
+
+	err := c.UpdateIssuesDeadlines()
 	if err != nil {
 		log.Println(err)
 		return

@@ -25,11 +25,11 @@ func (h *IssuesEventHandler) HandleEvent(event interface{}) error {
 		fmt.Println(fmt.Sprintf("Event: Issue #%d has been %s", issuesEvent.GetIssue().GetNumber(), issuesEvent.GetAction()))
 		fmt.Println("Label:", issuesEvent.GetLabel().GetName())
 
-		chronos.request = ChronosUpdateSingleIssueDeadlineRequest{
+		chronos.SetRequest(ChronosUpdateSingleIssueDeadlineRequest{
 			IssueNumber: issuesEvent.GetIssue().GetNumber(),
 			LabelName:   issuesEvent.GetLabel().GetName(),
 			Created:     issuesEvent.GetIssue().GetCreatedAt(),
-		}
+		})
 
 		if strings.Split(issuesEvent.GetLabel().GetName(), ": ")[0] == "Prioridade" {
 			return chronos.UpdateSingleIssueDeadline()

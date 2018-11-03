@@ -2,6 +2,7 @@ package chronos
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -14,16 +15,26 @@ func (h *ProjectCardEventHandler) HandleEvent(event interface{}) error {
 		projectCardEvent = event.(*github.ProjectCardEvent)
 	)
 
+	auth := github.BasicAuthTransport{
+		Username: os.Getenv("CHRONOS_GITHUB_LOGIN"),
+		Password: os.Getenv("CHRONOS_GITHUB_PASSWORD"),
+	}
+	chronos.client = github.NewClient(auth.Client())
+
 	switch projectCardEvent.GetAction() {
 	case "moved":
 		fmt.Println(fmt.Sprintf("Event: Project card #%d has been %s", projectCardEvent.GetProjectCard().GetID(), projectCardEvent.GetAction()))
 
 		issueNumber, _ := strconv.Atoi(strings.Split(projectCardEvent.GetProjectCard().GetContentURL(), "/issues/")[1])
-		data := ChronosUpdateSingleIssueStatusRequest{
+		projectID, _ := strconv.ParseInt(strings.Split(projectCardEvent.GetProjectCard().GetProjectURL(), "/projects/")[1], 10, 64)
+
+		chronos.SetRequest(ChronosUpdateSingleIssueStatusRequest{
 			IssueNumber: issueNumber,
+			ProjectID:   projectID,
 			ColumnToID:  projectCardEvent.GetProjectCard().GetColumnID(),
-		}
-		return chronos.UpdateSingleIssueStatus(&data)
+		})
+
+		return chronos.UpdateSingleIssueStatus()
 	default:
 		fmt.Println(fmt.Sprintf("Event: Project card #%d has been %s", projectCardEvent.GetProjectCard().GetID(), projectCardEvent.GetAction()))
 		return nil

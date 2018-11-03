@@ -7,7 +7,20 @@ import (
 	"github.com/go-resty/resty"
 )
 
-func (h *Chronos) GetHolidays(year int) error {
+type Holidays map[string][]Holiday
+
+type Holiday struct {
+	Name    string `json:"name"`
+	Country string `json:"country"`
+	Date    string `json:"date"`
+}
+
+type holidaysResponse struct {
+	status   int
+	Holidays Holidays `json:"holidays"`
+}
+
+func (h *Chronos) GetHolidays(year int) (Holidays, error) {
 	query := map[string]string{
 		"country": "BR",
 		"year":    strconv.Itoa(year),
@@ -15,21 +28,14 @@ func (h *Chronos) GetHolidays(year int) error {
 
 	resp, err := resty.R().SetQueryParams(query).Get(HOLIDAY_API_URL)
 	if err != nil {
-		return ErrUnableToSendGetHolidaysRequest
+		return nil, ErrUnableToSendGetHolidaysRequest
 	}
 
 	var res holidaysResponse
 	err = json.Unmarshal(resp.Body(), &res)
 	if err != nil {
-		return ErrUnableToUnmarshalGetHolidaysResponse
+		return nil, ErrUnableToUnmarshalGetHolidaysResponse
 	}
 
-	h.holidays = res.Holidays
-
-	return nil
-}
-
-type holidaysResponse struct {
-	status   int
-	Holidays Holidays `json:"holidays"`
+	return res.Holidays, nil
 }
