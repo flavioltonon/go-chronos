@@ -17,7 +17,7 @@ var (
 
 	ErrUnableToDefineTimer = errors.New("unable to define timer from unexpected label")
 
-	ErrUnableToSendGetIssueRequest       = errors.New("unable to send GetIssue request")
+	ErrUnableToGetIssue                  = errors.New("unable to get issue")
 	ErrUnableToUnmarshalGetIssueResponse = errors.New("unable to unmarshal GetIssue response")
 
 	ErrUnableToGetIssuesFromRepo          = errors.New("unable to get issues from repository")
@@ -31,4 +31,10 @@ var (
 
 	ErrUnableToSendGetHolidaysRequest       = errors.New("unable to send GetHolidays request")
 	ErrUnableToUnmarshalGetHolidaysResponse = errors.New("unable to unmarshal GetHolidays response")
+
+	ErrUnexpectedColumnName = errors.New("unexpected column name")
+
+	ErrUnableToGetProjectColumns = errors.New("unable to get project columns")
+
+	ErrUnableToUpdateIssueState = errors.New("unable to update issue state")
 )
