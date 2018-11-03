@@ -26,3 +26,11 @@ func (h *LabelEventHandler) HandleEvent(event interface{}) error {
 	}
 	return nil
 }
+
+func SetColorToLabel(name string) string {
+	if name == "Overdue" {
+		return "4b21c6"
+	}
+
+	return "ffffff"
+}
