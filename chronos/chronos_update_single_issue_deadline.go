@@ -24,7 +24,7 @@ type ChronosUpdateSingleIssueDeadlineRequest struct {
 	timerLabel   string
 }
 
-type ChronosSetIssueDeadlineResponse struct {
+type ChronosUpdateSingleIssueDeadlineResponse struct {
 }
 
 func (h *Chronos) calculateElapsedTime() error {
@@ -40,7 +40,7 @@ func (h *Chronos) calculateElapsedTime() error {
 	created := req.Created.In(loc)
 	elapsedTime := int(math.Round(now.Sub(created).Hours()))
 
-	err := h.GetHolidays(now.Year())
+	holidays, err := h.GetHolidays(now.Year())
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (h *Chronos) calculateElapsedTime() error {
 		}
 
 		// Check for holidays
-		_, exists := h.holidays[created.Add(time.Duration(t)*time.Hour).Format("2006-01-02")]
+		_, exists := holidays[created.Add(time.Duration(t)*time.Hour).Format("2006-01-02")]
 		if exists {
 			holidayHours++
 			continue
@@ -78,7 +78,6 @@ func (h *Chronos) calculateElapsedTime() error {
 
 	req.elapsedTime = now.Sub(created).Hours() - weekendHours - holidayHours
 	req.nonWorkHours = nonWorkHours
-
 	h.request = req
 
 	return nil
@@ -86,45 +85,57 @@ func (h *Chronos) calculateElapsedTime() error {
 
 func (h *Chronos) defineNewDeadline() error {
 	var (
-		req      = h.request.(ChronosUpdateSingleIssueDeadlineRequest)
-		deadline string
-		usage    float64
+		req                = h.request.(ChronosUpdateSingleIssueDeadlineRequest)
+		deadline           string
+		deducer            float64
+		deduceNonWorkHours bool
 	)
 
 	timeTable := make(map[string]float64)
-	timeTable["horas"] = req.elapsedTime - usage*req.nonWorkHours
-	timeTable["dias"] = req.elapsedTime / (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
+	timeTable["horas"] = req.elapsedTime - deducer*req.nonWorkHours
+	timeTable["dias"] = (req.elapsedTime - deducer*req.nonWorkHours) / (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
 
 	switch req.LabelName {
-	case "Prioridade: Baixa":
+	case PRIORITY_LABEL_PRIORIDADE_BAIXA:
 		deadline = DEADLINE_PRIORIDADE_BAIXA
-		usage = 1
-	case "Prioridade: Média":
+		deduceNonWorkHours = true
+	case PRIORITY_LABEL_PRIORIDADE_MEDIA:
 		deadline = DEADLINE_PRIORIDADE_MEDIA
-		usage = 1
-	case "Prioridade: Alta":
+		deduceNonWorkHours = true
+	case PRIORITY_LABEL_PRIORIDADE_ALTA:
 		deadline = DEADLINE_PRIORIDADE_ALTA
-		usage = 1
-	case "Prioridade: Muito Alta":
+		deduceNonWorkHours = true
+	case PRIORITY_LABEL_PRIORIDADE_MUITO_ALTA:
 		deadline = DEADLINE_PRIORIDADE_MUITO_ALTA
-		usage = 0
+		deduceNonWorkHours = false
 	default:
 		return ErrUnableToDefineTimer
 	}
 
+	if deduceNonWorkHours {
+		deducer = 1
+	} else {
+		deducer = 0
+	}
+
 	deadlineTime, _ := strconv.ParseFloat(strings.Split(deadline, " ")[0], 64)
 	deadlineType := strings.Split(deadline, " ")[1]
+	if deduceNonWorkHours && deadlineTime-timeTable[deadlineType] < 1 {
+		deadlineType = "horas"
+		deadlineTime = deadlineTime * (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
+	}
+
 	if timeTable[deadlineType] > deadlineTime {
 		req.overdue = true
 	}
-	req.timer = strconv.FormatFloat(deadlineTime-math.Round(timeTable[deadlineType]), 'f', -1, 64) + " " + deadlineType
 
+	req.timer = strconv.FormatFloat(deadlineTime-math.Round(timeTable[deadlineType]), 'f', -1, 64) + " " + deadlineType
 	h.request = req
 
 	return nil
 }
 
-func (h *Chronos) prepareLabel() error {
+func (h *Chronos) prepareDeadlineLabel() error {
 	var (
 		req       = h.request.(ChronosUpdateSingleIssueDeadlineRequest)
 		labelName string
@@ -135,8 +146,10 @@ func (h *Chronos) prepareLabel() error {
 		labelName = "Overdue"
 	}
 
+	color := SetColorToLabel(labelName)
 	newLabel := &github.Label{
-		Name: &labelName,
+		Name:  &labelName,
+		Color: &color,
 	}
 
 	_, _, err := h.client.Issues.GetLabel(context.Background(), OWNER, REPO, labelName)
@@ -148,7 +161,6 @@ func (h *Chronos) prepareLabel() error {
 	}
 
 	req.timerLabel = labelName
-
 	h.request = req
 
 	return nil
@@ -171,15 +183,21 @@ func (h Chronos) updateDeadlineLabel() error {
 			if strings.Split(label.GetName(), " ")[2] == "dias" || strings.Split(label.GetName(), " ")[2] == "horas" {
 				labelsNames = append(labelsNames, label.GetName())
 			}
+			continue
+		}
+		if label.GetName() == "Overdue" {
+			if label.GetName() != req.LabelName {
+				labelsNames = append(labelsNames, label.GetName())
+			}
+			continue
 		}
 		if strings.Split(label.GetName(), ": ")[0] == "Prioridade" {
 			if label.GetName() != req.LabelName {
 				labelsNames = append(labelsNames, label.GetName())
 			}
+			continue
 		}
 	}
-
-	issueNumber := req.IssueNumber
 
 	for _, label := range labelsNames {
 		wg.Add(1)
@@ -191,7 +209,7 @@ func (h Chronos) updateDeadlineLabel() error {
 				return
 			}
 			wg.Done()
-		}(issueNumber, label)
+		}(req.IssueNumber, label)
 	}
 	if err != nil {
 		return err
@@ -199,14 +217,13 @@ func (h Chronos) updateDeadlineLabel() error {
 
 	wg.Wait()
 
-	newLabel := req.timerLabel
 	go func(issueNumber int, newLabel string) {
 		_, _, e := h.client.Issues.AddLabelsToIssue(context.Background(), OWNER, REPO, issueNumber, []string{newLabel})
 		if e != nil {
 			err = ErrUnableToAddLabelsToIssue
 			return
 		}
-	}(issueNumber, newLabel)
+	}(req.IssueNumber, req.timerLabel)
 
 	return err
 }
@@ -224,7 +241,7 @@ func (h Chronos) UpdateSingleIssueDeadline() error {
 		return err
 	}
 
-	err = h.prepareLabel()
+	err = h.prepareDeadlineLabel()
 	if err != nil {
 		return err
 	}
