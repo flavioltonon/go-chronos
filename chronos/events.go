@@ -6,6 +6,8 @@ type Event interface {
 
 type IssuesEventHandler struct{}
 
+type LabelEventHandler struct{}
+
 type ProjectCardEventHandler struct{}
 
 type PingEventHandler struct{}

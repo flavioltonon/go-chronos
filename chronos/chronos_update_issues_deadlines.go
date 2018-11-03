@@ -1,48 +1,66 @@
 package chronos
 
 import (
+	"context"
 	"strings"
 	"sync"
+
+	"github.com/google/go-github/github"
 )
 
-func (h *Chronos) getIssues(query map[string]string) error {
-	return h.GetIssues(query)
+func (h *Chronos) getIssues() error {
+	issues, _, err := h.client.Issues.ListByRepo(context.Background(), OWNER, REPO, &github.IssueListByRepoOptions{
+		State: "open",
+	})
+	if err != nil {
+		return ErrUnableToGetIssuesFromRepo
+	}
+
+	h.issues = issues
+
+	return nil
 }
 
 func (h *Chronos) updateIssuesDeadlineLabels() error {
-	var wg sync.WaitGroup
+	var (
+		wg  sync.WaitGroup
+		err error
+	)
 
 	for _, issue := range h.issues {
+		var (
+			labels []string
+		)
 
-		wg.Add(1)
+		for _, label := range issue.Labels {
+			if strings.Split(label.GetName(), ": ")[0] == "Prioridade" {
+				labels = append(labels, label.GetName())
+			}
+		}
 
-		go func(issue Issue) {
-			var (
-				err    error
-				labels []string
-			)
-
-			for _, label := range issue.Labels {
-				if strings.Split(label.Name, ": ")[0] == "Prioridade" {
-					labels = append(labels, label.Name)
+		for _, label := range labels {
+			wg.Add(1)
+			go func(issue *github.Issue, label string) {
+				_, e := h.client.Issues.RemoveLabelForIssue(context.Background(), OWNER, REPO, issue.GetNumber(), label)
+				if e != nil {
+					err = ErrUnableToDeleteLabelsFromIssue
+					wg.Done()
+					return
 				}
-			}
 
-			err = h.DeleteLabelsFromIssue(issue.Number, labels)
-			if err != nil {
+				_, _, e = h.client.Issues.AddLabelsToIssue(context.Background(), OWNER, REPO, issue.GetNumber(), []string{label})
+				if e != nil {
+					err = ErrUnableToAddLabelsToIssue
+					wg.Done()
+					return
+				}
 				wg.Done()
-				return
-			}
+			}(issue, label)
+		}
+	}
 
-			err = h.AddLabelsToIssue(issue.Number, labels)
-			if err != nil {
-				wg.Done()
-				return
-			}
-
-			wg.Done()
-
-		}(issue)
+	if err != nil {
+		return err
 	}
 
 	wg.Wait()
@@ -50,13 +68,10 @@ func (h *Chronos) updateIssuesDeadlineLabels() error {
 	return nil
 }
 
-func (h Chronos) UpdateIssuesDeadlines() error {
+func (h *Chronos) UpdateIssuesDeadlines() error {
 	var err error
 
-	query := map[string]string{
-		"state": "open",
-	}
-	err = h.getIssues(query)
+	err = h.getIssues()
 	if err != nil {
 		return err
 	}

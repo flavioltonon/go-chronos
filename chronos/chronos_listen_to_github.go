@@ -30,6 +30,13 @@ func (h Chronos) ListenToGitHub(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
+	case *github.LabelEvent:
+		var labelEventHandler LabelEventHandler
+		err := labelEventHandler.HandleEvent(event)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	case *github.ProjectCardEvent:
 		var projectCardEventHandler ProjectCardEventHandler
 		err := projectCardEventHandler.HandleEvent(event)

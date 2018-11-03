@@ -5,6 +5,9 @@ const (
 	OWNER          = "flavioltonon"
 	REPO           = "go-chronos"
 
+	WORK_HOURS_INITIAL = 9
+	WORK_HOURS_FINAL   = 18
+
 	DEADLINE_PRIORIDADE_MUITO_ALTA = "24 horas"
 	DEADLINE_PRIORIDADE_ALTA       = "3 dias"
 	DEADLINE_PRIORIDADE_MEDIA      = "15 dias"
