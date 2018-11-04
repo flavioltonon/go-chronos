@@ -70,28 +70,28 @@ func (h *Chronos) prepareStatusLabel() error {
 		req.issueState = "open"
 	case COLUMN_DEPLOY:
 		req.issueState = "closed"
-		req.issueStatusLabel = STATUS_LABEL_DEPLOY
+		// req.issueStatusLabel = STATUS_LABEL_DEPLOY
 	case COLUMN_DONE:
 		req.issueState = "closed"
 	default:
 		return ErrUnexpectedProjectColumnName
 	}
 
-	color := SetColorToLabel(req.issueStatusLabel)
-	newLabel := &github.Label{
-		Name:  &req.issueStatusLabel,
-		Color: &color,
-	}
+	// color := SetColorToLabel(req.issueStatusLabel)
+	// newLabel := &github.Label{
+	// 	Name:  &req.issueStatusLabel,
+	// 	Color: &color,
+	// }
 
-	if *newLabel.Name != "" {
-		_, _, err := h.client.Issues.GetLabel(context.Background(), OWNER, REPO, req.issueStatusLabel)
-		if err != nil {
-			_, _, err := h.client.Issues.CreateLabel(context.Background(), OWNER, REPO, newLabel)
-			if err != nil {
-				return err
-			}
-		}
-	}
+	// if *newLabel.Name != "" {
+	// 	_, _, err := h.client.Issues.GetLabel(context.Background(), OWNER, REPO, req.issueStatusLabel)
+	// 	if err != nil {
+	// 		_, _, err := h.client.Issues.CreateLabel(context.Background(), OWNER, REPO, newLabel)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// }
 
 	h.request = req
 
@@ -180,10 +180,10 @@ func (h Chronos) UpdateSingleIssueStatus() error {
 		return err
 	}
 
-	err = h.updateIssueStatusLabel()
-	if err != nil {
-		return err
-	}
+	// err = h.updateIssueStatusLabel()
+	// if err != nil {
+	// 	return err
+	// }
 
 	err = h.updateIssueState()
 	if err != nil {
