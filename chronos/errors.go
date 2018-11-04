@@ -3,6 +3,8 @@ package chronos
 import "errors"
 
 var (
+	ErrNothingToUpdate = errors.New("nothing to update")
+
 	ErrUnableToSendGetLabelsFromIssueRequest       = errors.New("unable to send GetLabelsFromIssue request")
 	ErrUnableToUnmarshalGetLabelsFromIssueResponse = errors.New("unable to unmarshal GetLabelsFromIssue response")
 
