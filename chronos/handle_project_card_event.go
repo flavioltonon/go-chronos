@@ -21,10 +21,10 @@ func (h *ProjectCardEventHandler) HandleEvent(event interface{}) error {
 	}
 	chronos.client = github.NewClient(auth.Client())
 
+	fmt.Println(fmt.Sprintf("Event: Project card #%d has been %s", projectCardEvent.GetProjectCard().GetID(), projectCardEvent.GetAction()))
+
 	switch projectCardEvent.GetAction() {
 	case "moved":
-		fmt.Println(fmt.Sprintf("Event: Project card #%d has been %s", projectCardEvent.GetProjectCard().GetID(), projectCardEvent.GetAction()))
-
 		issueNumber, _ := strconv.Atoi(strings.Split(projectCardEvent.GetProjectCard().GetContentURL(), "/issues/")[1])
 		projectID, _ := strconv.ParseInt(strings.Split(projectCardEvent.GetProjectCard().GetProjectURL(), "/projects/")[1], 10, 64)
 
@@ -36,7 +36,6 @@ func (h *ProjectCardEventHandler) HandleEvent(event interface{}) error {
 
 		return chronos.UpdateSingleIssueStatus()
 	default:
-		fmt.Println(fmt.Sprintf("Event: Project card #%d has been %s", projectCardEvent.GetProjectCard().GetID(), projectCardEvent.GetAction()))
 		return nil
 	}
 }

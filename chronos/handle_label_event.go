@@ -17,13 +17,9 @@ func (h *LabelEventHandler) HandleEvent(event interface{}) error {
 	chronos.client = github.NewClient(auth.Client())
 
 	labelEvent := event.(*github.LabelEvent)
-	switch labelEvent.GetAction() {
-	case "created":
-		fmt.Println(fmt.Sprintf("Event: New label %s has been %s", labelEvent.GetLabel().GetName(), labelEvent.GetAction()))
-	default:
-		fmt.Println(fmt.Sprintf("Event: Label %s has been %s", labelEvent.GetLabel().GetName(), labelEvent.GetAction()))
-		return nil
-	}
+
+	fmt.Println(fmt.Sprintf("Event: Label %s has been %s", labelEvent.GetLabel().GetName(), labelEvent.GetAction()))
+
 	return nil
 }
 

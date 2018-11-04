@@ -2,6 +2,7 @@ package chronos
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -18,28 +19,30 @@ func (h *IssuesEventHandler) HandleEvent(event interface{}) error {
 	chronos.client = github.NewClient(auth.Client())
 
 	issuesEvent := event.(*github.IssuesEvent)
+
+	log.Println(fmt.Sprintf("Event: Issue #%d has been %s", issuesEvent.GetIssue().GetNumber(), issuesEvent.GetAction()))
+
 	switch issuesEvent.GetAction() {
 	case "opened":
-		fmt.Println(fmt.Sprintf("Event: Issue #%d has been %s", issuesEvent.GetIssue().GetNumber(), issuesEvent.GetAction()))
+		return nil
 	case "labeled":
-		fmt.Println(fmt.Sprintf("Event: Issue #%d has been %s", issuesEvent.GetIssue().GetNumber(), issuesEvent.GetAction()))
-		fmt.Println("Label:", issuesEvent.GetLabel().GetName())
-
-		chronos.SetRequest(ChronosUpdateSingleIssueDeadlineRequest{
-			IssueNumber: issuesEvent.GetIssue().GetNumber(),
-			LabelName:   issuesEvent.GetLabel().GetName(),
-			Created:     issuesEvent.GetIssue().GetCreatedAt(),
-		})
+		log.Println("Label:", issuesEvent.GetLabel().GetName())
 
 		if strings.Split(issuesEvent.GetLabel().GetName(), ": ")[0] == PRIORITY_LABEL_SIGNATURE {
+			chronos.SetRequest(ChronosUpdateSingleIssueDeadlineRequest{
+				IssueNumber: issuesEvent.GetIssue().GetNumber(),
+				LabelName:   issuesEvent.GetLabel().GetName(),
+				Created:     issuesEvent.GetIssue().GetCreatedAt(),
+			})
+
 			return chronos.UpdateSingleIssueDeadline()
 		}
+
+		return nil
 	case "unlabeled":
-		fmt.Println(fmt.Sprintf("Event: Issue #%d has been %s", issuesEvent.GetIssue().GetNumber(), issuesEvent.GetAction()))
-		fmt.Println("Label:", issuesEvent.GetLabel().GetName())
+		log.Println("Label:", issuesEvent.GetLabel().GetName())
+		return nil
 	default:
-		fmt.Println("Event: Issue", issuesEvent.GetAction())
 		return nil
 	}
-	return nil
 }
