@@ -20,10 +20,10 @@ const (
 	DEADLINE_TYPE_DAYS  = "dias"
 
 	DEADLINE_LABEL_SIGNATURE             = "Prazo"
-	DEADLINE_LABEL_PRIORIDADE_MUITO_ALTA = "24 horas"
-	DEADLINE_LABEL_PRIORIDADE_ALTA       = "3 dias"
-	DEADLINE_LABEL_PRIORIDADE_MEDIA      = "15 dias"
-	DEADLINE_LABEL_PRIORIDADE_BAIXA      = "60 dias"
+	DEADLINE_LABEL_PRIORIDADE_MUITO_ALTA = "Prazo: 24 horas"
+	DEADLINE_LABEL_PRIORIDADE_ALTA       = "Prazo: 3 dias"
+	DEADLINE_LABEL_PRIORIDADE_MEDIA      = "Prazo: 15 dias"
+	DEADLINE_LABEL_PRIORIDADE_BAIXA      = "Prazo: 60 dias"
 	DEADLINE_LABEL_OVERDUE               = "Overdue"
 
 	COLUMN_BACKLOG       = "Backlog"
@@ -31,8 +31,11 @@ const (
 	COLUMN_DEPLOY        = "Deploy"
 	COLUMN_DONE          = "Concluído"
 
-	STATUS_LABEL_SIGNATURE = "Status"
-	STATUS_LABEL_DEPLOY    = "Status: PR/Testes"
+	STATUS_LABEL_SIGNATURE      = "Status"
+	STATUS_LABEL_BACKLOG        = ""
+	STATUS_LABEL_SPRINT_BACKLOG = ""
+	STATUS_LABEL_DEPLOY         = "Status: PR/Testes"
+	STATUS_LABEL_DONE           = ""
 
 	HOLIDAY_API_URL = "https://holidayapi.pl/v1/holidays"
 )

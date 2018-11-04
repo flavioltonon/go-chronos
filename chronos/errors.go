@@ -32,9 +32,10 @@ var (
 	ErrUnableToSendGetHolidaysRequest       = errors.New("unable to send GetHolidays request")
 	ErrUnableToUnmarshalGetHolidaysResponse = errors.New("unable to unmarshal GetHolidays response")
 
-	ErrUnexpectedColumnName = errors.New("unexpected column name")
-
-	ErrUnableToGetProjectColumns = errors.New("unable to get project columns")
+	ErrUnableToGetRepositoryProjects = errors.New("unable to get repository projects")
+	ErrUnableToGetProjectCards       = errors.New("unable to get project cards")
+	ErrUnableToGetProjectColumns     = errors.New("unable to get project columns")
+	ErrUnexpectedProjectColumnName   = errors.New("unexpected project column name")
 
 	ErrUnableToUpdateIssueState = errors.New("unable to update issue state")
 )

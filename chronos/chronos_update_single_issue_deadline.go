@@ -117,7 +117,7 @@ func (h *Chronos) defineNewDeadline() error {
 		deducer = 0
 	}
 
-	deadlineTime, _ := strconv.ParseFloat(strings.Split(deadline, " ")[0], 64)
+	deadlineTime, _ := strconv.ParseFloat(strings.Split(deadline, " ")[1], 64)
 	deadlineType := strings.Split(deadline, " ")[1]
 	if deduceNonWorkHours && deadlineTime-timeTable[deadlineType] < 1 {
 		deadlineType = DEADLINE_TYPE_HOURS
@@ -216,13 +216,10 @@ func (h Chronos) updateDeadlineLabel() error {
 
 	wg.Wait()
 
-	go func(issueNumber int, newLabel string) {
-		_, _, e := h.client.Issues.AddLabelsToIssue(context.Background(), OWNER, REPO, issueNumber, []string{newLabel})
-		if e != nil {
-			err = ErrUnableToAddLabelsToIssue
-			return
-		}
-	}(req.IssueNumber, req.timerLabel)
+	_, _, e := h.client.Issues.AddLabelsToIssue(context.Background(), OWNER, REPO, req.IssueNumber, []string{req.timerLabel})
+	if e != nil {
+		return ErrUnableToAddLabelsToIssue
+	}
 
 	return err
 }

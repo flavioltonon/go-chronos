@@ -74,7 +74,7 @@ func (h *Chronos) prepareStatusLabel() error {
 	case COLUMN_DONE:
 		req.issueState = "closed"
 	default:
-		return ErrUnexpectedColumnName
+		return ErrUnexpectedProjectColumnName
 	}
 
 	color := SetColorToLabel(req.issueStatusLabel)
@@ -128,19 +128,23 @@ func (h *Chronos) updateIssueStatusLabel() error {
 		return err
 	}
 
-	wg.Wait()
-
 	if req.issueStatusLabel == "" {
+		wg.Wait()
 		return nil
 	}
 
+	wg.Add(1)
 	go func(issueNumber int, newLabel string) {
 		_, _, e := h.client.Issues.AddLabelsToIssue(context.Background(), OWNER, REPO, issueNumber, []string{newLabel})
 		if e != nil {
 			err = ErrUnableToAddLabelsToIssue
+			wg.Done()
 			return
 		}
+		wg.Done()
 	}(req.IssueNumber, req.issueStatusLabel)
+
+	wg.Wait()
 
 	return nil
 }
