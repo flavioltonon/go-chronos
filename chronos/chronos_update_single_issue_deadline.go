@@ -2,7 +2,6 @@ package chronos
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -35,7 +34,7 @@ func (h *Chronos) calculateElapsedTime() error {
 		holidayHours float64
 	)
 
-	loc, _ := time.LoadLocation("America/Sao_Paulo")
+	loc, _ := time.LoadLocation(STANDARD_TIME_LOCATION)
 	now := time.Now().In(loc)
 	created := req.Created.In(loc)
 	elapsedTime := int(math.Round(now.Sub(created).Hours()))
@@ -92,21 +91,21 @@ func (h *Chronos) defineNewDeadline() error {
 	)
 
 	timeTable := make(map[string]float64)
-	timeTable["horas"] = req.elapsedTime - deducer*req.nonWorkHours
-	timeTable["dias"] = (req.elapsedTime - deducer*req.nonWorkHours) / (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
+	timeTable[DEADLINE_TYPE_HOURS] = req.elapsedTime - deducer*req.nonWorkHours
+	timeTable[DEADLINE_TYPE_DAYS] = (req.elapsedTime - deducer*req.nonWorkHours) / (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
 
 	switch req.LabelName {
 	case PRIORITY_LABEL_PRIORIDADE_BAIXA:
-		deadline = DEADLINE_PRIORIDADE_BAIXA
+		deadline = DEADLINE_LABEL_PRIORIDADE_BAIXA
 		deduceNonWorkHours = true
 	case PRIORITY_LABEL_PRIORIDADE_MEDIA:
-		deadline = DEADLINE_PRIORIDADE_MEDIA
+		deadline = DEADLINE_LABEL_PRIORIDADE_MEDIA
 		deduceNonWorkHours = true
 	case PRIORITY_LABEL_PRIORIDADE_ALTA:
-		deadline = DEADLINE_PRIORIDADE_ALTA
+		deadline = DEADLINE_LABEL_PRIORIDADE_ALTA
 		deduceNonWorkHours = true
 	case PRIORITY_LABEL_PRIORIDADE_MUITO_ALTA:
-		deadline = DEADLINE_PRIORIDADE_MUITO_ALTA
+		deadline = DEADLINE_LABEL_PRIORIDADE_MUITO_ALTA
 		deduceNonWorkHours = false
 	default:
 		return ErrUnableToDefineTimer
@@ -121,7 +120,7 @@ func (h *Chronos) defineNewDeadline() error {
 	deadlineTime, _ := strconv.ParseFloat(strings.Split(deadline, " ")[0], 64)
 	deadlineType := strings.Split(deadline, " ")[1]
 	if deduceNonWorkHours && deadlineTime-timeTable[deadlineType] < 1 {
-		deadlineType = "horas"
+		deadlineType = DEADLINE_TYPE_HOURS
 		deadlineTime = deadlineTime * (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
 	}
 
@@ -141,9 +140,9 @@ func (h *Chronos) prepareDeadlineLabel() error {
 		labelName string
 	)
 
-	labelName = fmt.Sprintf("Prazo: %s", req.timer)
+	labelName = DEADLINE_LABEL_SIGNATURE + ": " + req.timer
 	if req.overdue {
-		labelName = "Overdue"
+		labelName = DEADLINE_LABEL_OVERDUE
 	}
 
 	color := SetColorToLabel(labelName)
@@ -179,19 +178,19 @@ func (h Chronos) updateDeadlineLabel() error {
 	}
 
 	for _, label := range labels {
-		if strings.Split(label.GetName(), ": ")[0] == "Prazo" {
-			if strings.Split(label.GetName(), " ")[2] == "dias" || strings.Split(label.GetName(), " ")[2] == "horas" {
+		if strings.Split(label.GetName(), ": ")[0] == DEADLINE_LABEL_SIGNATURE {
+			if strings.Split(label.GetName(), " ")[2] == DEADLINE_TYPE_DAYS || strings.Split(label.GetName(), " ")[2] == DEADLINE_TYPE_HOURS {
 				labelsNames = append(labelsNames, label.GetName())
 			}
 			continue
 		}
-		if label.GetName() == "Overdue" {
+		if label.GetName() == DEADLINE_LABEL_OVERDUE {
 			if label.GetName() != req.LabelName {
 				labelsNames = append(labelsNames, label.GetName())
 			}
 			continue
 		}
-		if strings.Split(label.GetName(), ": ")[0] == "Prioridade" {
+		if strings.Split(label.GetName(), ": ")[0] == PRIORITY_LABEL_SIGNATURE {
 			if label.GetName() != req.LabelName {
 				labelsNames = append(labelsNames, label.GetName())
 			}

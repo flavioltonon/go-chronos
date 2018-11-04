@@ -70,7 +70,7 @@ func (h *Chronos) prepareStatusLabel() error {
 		req.issueState = "open"
 	case COLUMN_DEPLOY:
 		req.issueState = "closed"
-		req.issueStatusLabel = DEPLOY_STATUS_LABEL
+		req.issueStatusLabel = STATUS_LABEL_DEPLOY
 	case COLUMN_DONE:
 		req.issueState = "closed"
 	default:
@@ -107,7 +107,7 @@ func (h *Chronos) updateIssueStatusLabel() error {
 	)
 
 	for _, label := range req.issue.Labels {
-		if strings.Split(label.GetName(), ": ")[0] == "Status" {
+		if strings.Split(label.GetName(), ": ")[0] == STATUS_LABEL_SIGNATURE {
 			oldStatusLabels = append(oldStatusLabels, label.GetName())
 		}
 	}

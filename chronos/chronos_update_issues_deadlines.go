@@ -44,7 +44,7 @@ func (h *Chronos) updateIssuesDeadlineLabels() error {
 		)
 
 		for _, label := range issue.Labels {
-			if strings.Split(label.GetName(), ": ")[0] == "Prioridade" {
+			if strings.Split(label.GetName(), ": ")[0] == PRIORITY_LABEL_SIGNATURE {
 				labels = append(labels, label.GetName())
 			}
 		}

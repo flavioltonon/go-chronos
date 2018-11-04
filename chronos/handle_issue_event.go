@@ -31,7 +31,7 @@ func (h *IssuesEventHandler) HandleEvent(event interface{}) error {
 			Created:     issuesEvent.GetIssue().GetCreatedAt(),
 		})
 
-		if strings.Split(issuesEvent.GetLabel().GetName(), ": ")[0] == "Prioridade" {
+		if strings.Split(issuesEvent.GetLabel().GetName(), ": ")[0] == PRIORITY_LABEL_SIGNATURE {
 			return chronos.UpdateSingleIssueDeadline()
 		}
 	case "unlabeled":

@@ -28,7 +28,7 @@ func (h *LabelEventHandler) HandleEvent(event interface{}) error {
 }
 
 func SetColorToLabel(name string) string {
-	if name == "Overdue" {
+	if name == DEADLINE_LABEL_OVERDUE {
 		return "4b21c6"
 	}
 
