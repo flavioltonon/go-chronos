@@ -294,31 +294,26 @@ func (h *Chronos) UpdateIssuesDeadlines() error {
 
 		err = req.calculateElapsedTime()
 		if err != nil {
-			log.Println(err)
 			continue
 		}
 
 		err = req.findLabels()
 		if err != nil {
-			log.Println(err)
 			continue
 		}
 
 		err = req.defineNewDeadline()
 		if err != nil {
-			log.Println(err)
 			continue
 		}
 
 		err = req.prepareDeadlineLabel()
 		if err != nil {
-			log.Println(err)
 			continue
 		}
 
 		err = req.updateDeadlineLabel()
 		if err != nil {
-			log.Println(err)
 			continue
 		}
 

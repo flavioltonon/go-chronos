@@ -32,7 +32,6 @@ func (h *IssuesEventHandler) HandleEvent(event interface{}) error {
 				LabelName:   issuesEvent.GetLabel().GetName(),
 				Created:     issuesEvent.GetIssue().GetCreatedAt(),
 			})
-
 			return chronos.UpdateSingleIssueDeadline()
 		}
 
