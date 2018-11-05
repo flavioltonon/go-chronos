@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/google/go-github/github"
+	"github.com/flavioltonon/go-github/github"
 )
 
 func (h Chronos) ListenToGitHub(w http.ResponseWriter, r *http.Request) {

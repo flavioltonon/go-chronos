@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  digest = "1:f4f203acd8b11b8747bdcd91696a01dbc95ccb9e2ca2db6abf81c3a4f5e950ce"
+  name = "github.com/flavioltonon/go-github"
+  packages = ["github"]
+  pruneopts = "UT"
+  revision = "f55b50f38167644bb7e4be03d9a2bde71d435239"
+  version = "v18.2.0"
+
+[[projects]]
   digest = "1:559e4b9d3613025c3b53aff0aa15f41ed6fa82c24cd06e56932b9f0df4ba9ebb"
   name = "github.com/go-resty/resty"
   packages = ["."]
@@ -63,6 +71,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/flavioltonon/go-github/github",
     "github.com/go-resty/resty",
     "github.com/google/go-github/github",
   ]

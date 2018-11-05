@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/github"
+	"github.com/flavioltonon/go-github/github"
 )
 
 func (h *ProjectCardEventHandler) HandleEvent(event interface{}) error {

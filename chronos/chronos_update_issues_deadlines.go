@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/flavioltonon/go-github/github"
 	"github.com/go-resty/resty"
-	"github.com/google/go-github/github"
 )
 
 type ChronosUpdateIssuesDeadlinesRequest struct {
@@ -156,16 +156,16 @@ func (h *ChronosUpdateIssuesDeadlinesRequest) defineNewDeadline() error {
 	switch h.priorityLabel {
 	case PRIORITY_LABEL_PRIORIDADE_BAIXA:
 		deadline = DEADLINE_LABEL_PRIORIDADE_BAIXA
-		deduceNonWorkHours = true
+		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORIDADE_BAIXA
 	case PRIORITY_LABEL_PRIORIDADE_MEDIA:
 		deadline = DEADLINE_LABEL_PRIORIDADE_MEDIA
-		deduceNonWorkHours = true
+		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORIDADE_MEDIA
 	case PRIORITY_LABEL_PRIORIDADE_ALTA:
 		deadline = DEADLINE_LABEL_PRIORIDADE_ALTA
-		deduceNonWorkHours = true
+		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORIDADE_ALTA
 	case PRIORITY_LABEL_PRIORIDADE_MUITO_ALTA:
 		deadline = DEADLINE_LABEL_PRIORIDADE_MUITO_ALTA
-		deduceNonWorkHours = false
+		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORIDADE_MUITO_ALTA
 	default:
 		return ErrUnableToDefineTimer
 	}

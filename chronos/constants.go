@@ -26,10 +26,20 @@ const (
 	DEADLINE_LABEL_PRIORIDADE_BAIXA      = "Prazo: 60 dias"
 	DEADLINE_LABEL_OVERDUE               = "Overdue"
 
-	COLUMN_BACKLOG       = "Backlog"
-	COLUMN_SPRINTBACKLOG = "Sprint backlog"
-	COLUMN_DEPLOY        = "Deploy"
-	COLUMN_DONE          = "Concluído"
+	DEDUCE_NON_WORK_HOURS_PRIORIDADE_MUITO_ALTA = false
+	DEDUCE_NON_WORK_HOURS_PRIORIDADE_ALTA       = true
+	DEDUCE_NON_WORK_HOURS_PRIORIDADE_MEDIA      = true
+	DEDUCE_NON_WORK_HOURS_PRIORIDADE_BAIXA      = true
+
+	COLUMN_BACKLOG        = "Backlog"
+	COLUMN_SPRINT_BACKLOG = "Sprint backlog"
+	COLUMN_DEPLOY         = "Deploy"
+	COLUMN_DONE           = "Concluído"
+
+	STANDARD_ISSUE_STATE_COLUMN_BACKLOG         = "open"
+	STANDARD_ISSUE_STATE_COLUMN__SPRINT_BACKLOG = "open"
+	STANDARD_ISSUE_STATE_COLUMN_DEPLOY          = "closed"
+	STANDARD_ISSUE_STATE_COLUMN_DONE            = "closed"
 
 	STATUS_LABEL_SIGNATURE      = "Status"
 	STATUS_LABEL_BACKLOG        = ""
