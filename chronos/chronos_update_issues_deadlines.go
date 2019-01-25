@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-resty/resty"
 	"github.com/flavioltonon/go-github/github"
+	"github.com/go-resty/resty"
 )
 
 type ChronosUpdateIssuesDeadlinesRequest struct {
@@ -294,31 +294,26 @@ func (h *Chronos) UpdateIssuesDeadlines() error {
 
 		err = req.calculateElapsedTime()
 		if err != nil {
-			log.Println(err)
 			continue
 		}
 
 		err = req.findLabels()
 		if err != nil {
-			log.Println(err)
 			continue
 		}
 
 		err = req.defineNewDeadline()
 		if err != nil {
-			log.Println(err)
 			continue
 		}
 
 		err = req.prepareDeadlineLabel()
 		if err != nil {
-			log.Println(err)
 			continue
 		}
 
 		err = req.updateDeadlineLabel()
 		if err != nil {
-			log.Println(err)
 			continue
 		}
 

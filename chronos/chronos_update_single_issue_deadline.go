@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-resty/resty"
 	"github.com/flavioltonon/go-github/github"
+	"github.com/go-resty/resty"
 )
 
 type ChronosUpdateSingleIssueDeadlineRequest struct {

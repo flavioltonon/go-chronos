@@ -58,14 +58,14 @@ func (h *ChronosUpdateSingleIssueStatusRequest) getIssue() error {
 func (h *ChronosUpdateSingleIssueStatusRequest) prepareStatusLabel() error {
 	switch h.columnsMap[h.ColumnToID] {
 	case COLUMN_BACKLOG:
-		h.issueState = "open"
+		h.issueState = STANDARD_ISSUE_STATE_COLUMN_BACKLOG
 	case COLUMN_SPRINT_BACKLOG:
-		h.issueState = "open"
-	case COLUMN_PULL_REQUEST:
-		h.issueState = "open"
+		h.issueState = STANDARD_ISSUE_STATE_COLUMN_SPRINT_BACKLOG
+	case COLUMN_DEPLOY:
+		h.issueState = STANDARD_ISSUE_STATE_COLUMN_DEPLOY
 		// h.issueStatusLabel = STATUS_LABEL_DEPLOY
 	case COLUMN_DONE:
-		h.issueState = "closed"
+		h.issueState = STANDARD_ISSUE_STATE_COLUMN_DONE
 	default:
 		return ErrUnexpectedProjectColumnName
 	}
