@@ -3,7 +3,7 @@ package chronos
 import (
 	"context"
 
-	"github.com/google/go-github/github"
+	"github.com/flavioltonon/go-github/github"
 )
 
 type ChronosRelabelIssueRequest struct {

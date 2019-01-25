@@ -5,7 +5,7 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/google/go-github/github"
+	"github.com/flavioltonon/go-github/github"
 )
 
 func (chronos Chronos) HandleIssuesEvent(event interface{}) error {

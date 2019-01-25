@@ -3,7 +3,7 @@ package chronos
 import (
 	"fmt"
 
-	"github.com/google/go-github/github"
+	"github.com/flavioltonon/go-github/github"
 )
 
 func (chronos Chronos) HandlePingEvent(event interface{}) error {

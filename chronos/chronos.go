@@ -1,6 +1,6 @@
 package chronos
 
-import "github.com/google/go-github/github"
+import "github.com/flavioltonon/go-github/github"
 
 type Chronos struct {
 	auth   github.BasicAuthTransport

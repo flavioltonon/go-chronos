@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty"
-	"github.com/google/go-github/github"
+	"github.com/flavioltonon/go-github/github"
 )
 
 type ChronosUpdateIssuesDeadlinesRequest struct {

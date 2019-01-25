@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/google/go-github/github"
+	"github.com/flavioltonon/go-github/github"
 )
 
 type ChronosUpdateSingleIssueStatusRequest struct {
