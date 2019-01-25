@@ -15,8 +15,8 @@ func main() {
 		Username: os.Getenv("CHRONOS_GITHUB_LOGIN"),
 		Password: os.Getenv("CHRONOS_GITHUB_PASSWORD"),
 	}
-	c.SetClient(github.NewClient(auth.Client()))
 
+	c.SetClient(github.NewClient(auth.Client()))
 	c.SetRequest(chronos.ChronosUpdateIssuesDeadlinesRequest{})
 
 	err := c.UpdateIssuesDeadlines()
