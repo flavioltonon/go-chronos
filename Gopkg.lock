@@ -2,12 +2,12 @@
 
 
 [[projects]]
-  digest = "1:fd296eae1bf49f0a3eedad6cc801cf3d304fb6eac3431917b012ff6c5c272743"
+  digest = "1:790e0304833f1a9a0c04487a72fe686c198aab1dc2ad8e0acecd145d86051902"
   name = "github.com/flavioltonon/go-github"
   packages = ["github"]
   pruneopts = "UT"
-  revision = "a5a6ed412721004ab77ecd661c7373f453c50c1a"
-  version = "v19.0.0"
+  revision = "b13eefab072406dd0cb5a9579fa942485d075b27"
+  version = "v19.0.1"
 
 [[projects]]
   digest = "1:559e4b9d3613025c3b53aff0aa15f41ed6fa82c24cd06e56932b9f0df4ba9ebb"
@@ -16,14 +16,6 @@
   pruneopts = "UT"
   revision = "92a651cff2687ad3083767fb04b6f53d258b546c"
   version = "v1.10.1"
-
-[[projects]]
-  digest = "1:f4f203acd8b11b8747bdcd91696a01dbc95ccb9e2ca2db6abf81c3a4f5e950ce"
-  name = "github.com/google/go-github"
-  packages = ["github"]
-  pruneopts = "UT"
-  revision = "f55b50f38167644bb7e4be03d9a2bde71d435239"
-  version = "v18.2.0"
 
 [[projects]]
   digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
@@ -73,7 +65,6 @@
   input-imports = [
     "github.com/flavioltonon/go-github/github",
     "github.com/go-resty/resty",
-    "github.com/google/go-github/github",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
