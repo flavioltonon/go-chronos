@@ -60,7 +60,7 @@ func (h *ChronosUpdateIssuesDeadlinesRequest) getHolidays() error {
 }
 
 func (h *ChronosUpdateIssuesDeadlinesRequest) getRepoIssues() error {
-	issues, _, err := h.client.Issues.ListByRepo(context.Background(), OWNER, REPO, &github.IssueListByRepoOptions{
+	issues, _, err := h.client.Issues.ListByRepo(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, &github.IssueListByRepoOptions{
 		State: "open",
 	})
 	if err != nil {
@@ -154,17 +154,17 @@ func (h *ChronosUpdateIssuesDeadlinesRequest) defineNewDeadline() error {
 	timeTable[DEADLINE_TYPE_DAYS] = (h.elapsedTime - deducer*h.nonWorkHours) / (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
 
 	switch h.priorityLabel {
-	case PRIORITY_LABEL_PRIORIDADE_BAIXA:
-		deadline = DEADLINE_LABEL_PRIORIDADE_BAIXA
+	case PRIORITY_LABEL_PRIORITY_LOW:
+		deadline = DEADLINE_LABEL_PRIORITY_LOW
 		deduceNonWorkHours = true
-	case PRIORITY_LABEL_PRIORIDADE_MEDIA:
-		deadline = DEADLINE_LABEL_PRIORIDADE_MEDIA
+	case PRIORITY_LABEL_PRIORITY_MEDIUM:
+		deadline = DEADLINE_LABEL_PRIORITY_MEDIUM
 		deduceNonWorkHours = true
-	case PRIORITY_LABEL_PRIORIDADE_ALTA:
-		deadline = DEADLINE_LABEL_PRIORIDADE_ALTA
+	case PRIORITY_LABEL_PRIORITY_HIGH:
+		deadline = DEADLINE_LABEL_PRIORITY_HIGH
 		deduceNonWorkHours = true
-	case PRIORITY_LABEL_PRIORIDADE_MUITO_ALTA:
-		deadline = DEADLINE_LABEL_PRIORIDADE_MUITO_ALTA
+	case PRIORITY_LABEL_PRIORITY_VERY_HIGH:
+		deadline = DEADLINE_LABEL_PRIORITY_VERY_HIGH
 		deduceNonWorkHours = false
 	default:
 		return ErrUnableToDefineTimer
@@ -206,9 +206,9 @@ func (h *ChronosUpdateIssuesDeadlinesRequest) prepareDeadlineLabel() error {
 		Color: &color,
 	}
 
-	_, _, err := h.client.Issues.GetLabel(context.Background(), OWNER, REPO, labelName)
+	_, _, err := h.client.Issues.GetLabel(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, labelName)
 	if err != nil {
-		_, _, err := h.client.Issues.CreateLabel(context.Background(), OWNER, REPO, newLabel)
+		_, _, err := h.client.Issues.CreateLabel(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, newLabel)
 		if err != nil {
 			return err
 		}
@@ -225,7 +225,7 @@ func (h *ChronosUpdateIssuesDeadlinesRequest) updateDeadlineLabel() error {
 		labelsNames []string
 	)
 
-	labels, _, err := h.client.Issues.ListLabelsByIssue(context.Background(), OWNER, REPO, h.issue.GetNumber(), nil)
+	labels, _, err := h.client.Issues.ListLabelsByIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.issue.GetNumber(), nil)
 	if err != nil {
 		return err
 	}
@@ -246,7 +246,7 @@ func (h *ChronosUpdateIssuesDeadlinesRequest) updateDeadlineLabel() error {
 	for _, label := range labelsNames {
 		wg.Add(1)
 		go func(issueNumber int, label string) {
-			_, e := h.client.Issues.RemoveLabelForIssue(context.Background(), OWNER, REPO, issueNumber, label)
+			_, e := h.client.Issues.RemoveLabelForIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, issueNumber, label)
 			if e != nil {
 				err = ErrUnableToDeleteLabelsFromIssue
 				wg.Done()
@@ -261,7 +261,7 @@ func (h *ChronosUpdateIssuesDeadlinesRequest) updateDeadlineLabel() error {
 
 	wg.Wait()
 
-	_, _, e := h.client.Issues.AddLabelsToIssue(context.Background(), OWNER, REPO, h.issue.GetNumber(), []string{h.newDeadlineLabel})
+	_, _, e := h.client.Issues.AddLabelsToIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.issue.GetNumber(), []string{h.newDeadlineLabel})
 	if e != nil {
 		return ErrUnableToAddLabelsToIssue
 	}

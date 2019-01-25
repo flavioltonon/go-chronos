@@ -17,6 +17,8 @@ var (
 	ErrUnableToSendDeleteLabelsFromIssueRequest = errors.New("unable to send DeleteLabelsFromIssue request")
 	ErrDeleteLabelsFromIssueBadResponse         = errors.New("got bad response during DeleteLabelsFromIssue request")
 
+	ErrUnableToReplaceLabelsFromIssue = errors.New("unable to replace labels from issue")
+
 	ErrUnableToDefineTimer = errors.New("unable to define timer from unexpected label")
 
 	ErrUnableToGetIssue                  = errors.New("unable to get issue")

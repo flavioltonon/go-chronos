@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-resty/resty"
@@ -117,17 +117,17 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) defineNewDeadline() error {
 	timeTable[DEADLINE_TYPE_DAYS] = (h.elapsedTime - deducer*h.nonWorkHours) / (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
 
 	switch h.LabelName {
-	case PRIORITY_LABEL_PRIORIDADE_BAIXA:
-		deadline = DEADLINE_LABEL_PRIORIDADE_BAIXA
+	case PRIORITY_LABEL_PRIORITY_LOW:
+		deadline = DEADLINE_LABEL_PRIORITY_LOW
 		deduceNonWorkHours = true
-	case PRIORITY_LABEL_PRIORIDADE_MEDIA:
-		deadline = DEADLINE_LABEL_PRIORIDADE_MEDIA
+	case PRIORITY_LABEL_PRIORITY_MEDIUM:
+		deadline = DEADLINE_LABEL_PRIORITY_MEDIUM
 		deduceNonWorkHours = true
-	case PRIORITY_LABEL_PRIORIDADE_ALTA:
-		deadline = DEADLINE_LABEL_PRIORIDADE_ALTA
+	case PRIORITY_LABEL_PRIORITY_HIGH:
+		deadline = DEADLINE_LABEL_PRIORITY_HIGH
 		deduceNonWorkHours = true
-	case PRIORITY_LABEL_PRIORIDADE_MUITO_ALTA:
-		deadline = DEADLINE_LABEL_PRIORIDADE_MUITO_ALTA
+	case PRIORITY_LABEL_PRIORITY_VERY_HIGH:
+		deadline = DEADLINE_LABEL_PRIORITY_VERY_HIGH
 		deduceNonWorkHours = false
 	default:
 		return ErrUnableToDefineTimer
@@ -171,9 +171,9 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) prepareDeadlineLabel() error {
 		Color: &color,
 	}
 
-	_, _, err := h.client.Issues.GetLabel(context.Background(), OWNER, REPO, labelName)
+	_, _, err := h.client.Issues.GetLabel(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, labelName)
 	if err != nil {
-		_, _, err := h.client.Issues.CreateLabel(context.Background(), OWNER, REPO, newLabel)
+		_, _, err := h.client.Issues.CreateLabel(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, newLabel)
 		if err != nil {
 			return err
 		}
@@ -185,58 +185,38 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) prepareDeadlineLabel() error {
 }
 
 func (h ChronosUpdateSingleIssueDeadlineRequest) updateDeadlineLabel() error {
-	var (
-		wg          sync.WaitGroup
-		labelsNames []string
-	)
+	var labelsNames = make([]string, 0)
 
-	labels, _, err := h.client.Issues.ListLabelsByIssue(context.Background(), OWNER, REPO, h.IssueNumber, nil)
+	labels, _, err := h.client.Issues.ListLabelsByIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.IssueNumber, nil)
 	if err != nil {
 		return err
 	}
+
+	labelsNames = append(labelsNames, h.LabelName)
+	labelsNames = append(labelsNames, h.timerLabel)
 
 	for _, label := range labels {
-		if strings.Split(label.GetName(), ": ")[0] == DEADLINE_LABEL_SIGNATURE {
-			if strings.Split(label.GetName(), " ")[2] == DEADLINE_TYPE_DAYS || strings.Split(label.GetName(), " ")[2] == DEADLINE_TYPE_HOURS {
-				labelsNames = append(labelsNames, label.GetName())
-			}
+		if regexp.MustCompile(DEADLINE_LABEL_SIGNATURE).MatchString(label.GetName()) {
 			continue
 		}
+
 		if label.GetName() == DEADLINE_LABEL_OVERDUE {
-			if label.GetName() != h.LabelName {
-				labelsNames = append(labelsNames, label.GetName())
-			}
 			continue
 		}
-		if strings.Split(label.GetName(), ": ")[0] == PRIORITY_LABEL_SIGNATURE {
-			if label.GetName() != h.LabelName {
-				labelsNames = append(labelsNames, label.GetName())
-			}
+
+		if regexp.MustCompile(PRIORITY_LABEL_SIGNATURE).MatchString(label.GetName()) {
 			continue
 		}
+
+		labelsNames = append(labelsNames, label.GetName())
 	}
 
-	for _, label := range labelsNames {
-		wg.Add(1)
-		go func(issueNumber int, label string) {
-			_, e := h.client.Issues.RemoveLabelForIssue(context.Background(), OWNER, REPO, issueNumber, label)
-			if e != nil {
-				err = ErrUnableToDeleteLabelsFromIssue
-				wg.Done()
-				return
-			}
-			wg.Done()
-		}(h.IssueNumber, label)
+	_, _, e := h.client.Issues.ReplaceLabelsForIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.IssueNumber, labelsNames)
+	if e != nil {
+		return ErrUnableToReplaceLabelsFromIssue
 	}
 	if err != nil {
 		return err
-	}
-
-	wg.Wait()
-
-	_, _, e := h.client.Issues.AddLabelsToIssue(context.Background(), OWNER, REPO, h.IssueNumber, []string{h.timerLabel})
-	if e != nil {
-		return ErrUnableToAddLabelsToIssue
 	}
 
 	return err

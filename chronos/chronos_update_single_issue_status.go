@@ -45,7 +45,7 @@ func (h *ChronosUpdateSingleIssueStatusRequest) mapProjectColumns() error {
 }
 
 func (h *ChronosUpdateSingleIssueStatusRequest) getIssue() error {
-	issue, _, err := h.client.Issues.Get(context.Background(), OWNER, REPO, h.IssueNumber)
+	issue, _, err := h.client.Issues.Get(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.IssueNumber)
 	if err != nil {
 		return ErrUnableToGetIssue
 	}
@@ -59,10 +59,10 @@ func (h *ChronosUpdateSingleIssueStatusRequest) prepareStatusLabel() error {
 	switch h.columnsMap[h.ColumnToID] {
 	case COLUMN_BACKLOG:
 		h.issueState = "open"
-	case COLUMN_SPRINTBACKLOG:
+	case COLUMN_SPRINT_BACKLOG:
 		h.issueState = "open"
-	case COLUMN_DEPLOY:
-		h.issueState = "closed"
+	case COLUMN_PULL_REQUEST:
+		h.issueState = "open"
 		// h.issueStatusLabel = STATUS_LABEL_DEPLOY
 	case COLUMN_DONE:
 		h.issueState = "closed"
@@ -77,9 +77,9 @@ func (h *ChronosUpdateSingleIssueStatusRequest) prepareStatusLabel() error {
 	// }
 
 	// if *newLabel.Name != "" {
-	// 	_, _, err := h.client.Issues.GetLabel(context.Background(), OWNER, REPO, h.issueStatusLabel)
+	// 	_, _, err := h.client.Issues.GetLabel(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.issueStatusLabel)
 	// 	if err != nil {
-	// 		_, _, err := h.client.Issues.CreateLabel(context.Background(), OWNER, REPO, newLabel)
+	// 		_, _, err := h.client.Issues.CreateLabel(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, newLabel)
 	// 		if err != nil {
 	// 			return err
 	// 		}
@@ -105,7 +105,7 @@ func (h *ChronosUpdateSingleIssueStatusRequest) updateIssueStatusLabel() error {
 	for _, label := range oldStatusLabels {
 		wg.Add(1)
 		go func(issueNumber int, label string) {
-			_, e := h.client.Issues.RemoveLabelForIssue(context.Background(), OWNER, REPO, issueNumber, label)
+			_, e := h.client.Issues.RemoveLabelForIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, issueNumber, label)
 			if e != nil {
 				err = ErrUnableToDeleteLabelsFromIssue
 				wg.Done()
@@ -125,7 +125,7 @@ func (h *ChronosUpdateSingleIssueStatusRequest) updateIssueStatusLabel() error {
 
 	wg.Add(1)
 	go func(issueNumber int, newLabel string) {
-		_, _, e := h.client.Issues.AddLabelsToIssue(context.Background(), OWNER, REPO, issueNumber, []string{newLabel})
+		_, _, e := h.client.Issues.AddLabelsToIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, issueNumber, []string{newLabel})
 		if e != nil {
 			err = ErrUnableToAddLabelsToIssue
 			wg.Done()
@@ -140,7 +140,7 @@ func (h *ChronosUpdateSingleIssueStatusRequest) updateIssueStatusLabel() error {
 }
 
 func (h *ChronosUpdateSingleIssueStatusRequest) updateIssueState() error {
-	_, _, err := h.client.Issues.Edit(context.Background(), OWNER, REPO, h.IssueNumber, &github.IssueRequest{
+	_, _, err := h.client.Issues.Edit(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.IssueNumber, &github.IssueRequest{
 		State: &h.issueState,
 	})
 	if err != nil {
