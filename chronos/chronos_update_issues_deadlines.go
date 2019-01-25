@@ -156,16 +156,16 @@ func (h *ChronosUpdateIssuesDeadlinesRequest) defineNewDeadline() error {
 	switch h.priorityLabel {
 	case PRIORITY_LABEL_PRIORITY_LOW:
 		deadline = DEADLINE_LABEL_PRIORITY_LOW
-		deduceNonWorkHours = true
+		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORITY_LOW
 	case PRIORITY_LABEL_PRIORITY_MEDIUM:
 		deadline = DEADLINE_LABEL_PRIORITY_MEDIUM
-		deduceNonWorkHours = true
+		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORITY_MEDIUM
 	case PRIORITY_LABEL_PRIORITY_HIGH:
 		deadline = DEADLINE_LABEL_PRIORITY_HIGH
-		deduceNonWorkHours = true
+		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORITY_HIGH
 	case PRIORITY_LABEL_PRIORITY_VERY_HIGH:
 		deadline = DEADLINE_LABEL_PRIORITY_VERY_HIGH
-		deduceNonWorkHours = false
+		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORITY_VERY_HIGH
 	default:
 		return ErrUnableToDefineTimer
 	}
