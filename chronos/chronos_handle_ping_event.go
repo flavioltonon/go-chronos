@@ -6,8 +6,8 @@ import (
 	"github.com/google/go-github/github"
 )
 
-func (h *PingEventHandler) HandleEvent(event interface{}) error {
-	pingEvent := event.(*github.PingEvent)
+func (chronos Chronos) HandlePingEvent(event interface{}) error {
+	var pingEvent = event.(*github.PingEvent)
 	fmt.Println("Event: Ping received.\nZen message:", pingEvent.GetZen())
 	return nil
 }

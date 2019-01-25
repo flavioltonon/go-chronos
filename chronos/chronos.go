@@ -16,3 +16,7 @@ func (h *Chronos) SetClient(client *github.Client) {
 func (h *Chronos) SetRequest(request interface{}) {
 	h.request = request
 }
+
+func (h Chronos) UserID() int64 {
+	return CHRONOS_GITHUB_USER_ID
+}
