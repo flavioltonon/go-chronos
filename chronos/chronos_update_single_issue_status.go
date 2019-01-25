@@ -61,9 +61,11 @@ func (h *ChronosUpdateSingleIssueStatusRequest) prepareStatusLabel() error {
 		h.issueState = STANDARD_ISSUE_STATE_COLUMN_BACKLOG
 	case COLUMN_SPRINT_BACKLOG:
 		h.issueState = STANDARD_ISSUE_STATE_COLUMN_SPRINT_BACKLOG
-	case COLUMN_DEPLOY:
-		h.issueState = STANDARD_ISSUE_STATE_COLUMN_DEPLOY
-		// h.issueStatusLabel = STATUS_LABEL_DEPLOY
+	case COLUMN_ONGOING:
+		h.issueState = STANDARD_ISSUE_STATE_COLUMN_ONGOING
+	case COLUMN_PULL_REQUEST:
+		h.issueState = STANDARD_ISSUE_STATE_COLUMN_PULL_REQUEST
+		// h.issueStatusLabel = STATUS_LABEL_PULL_REQUEST
 	case COLUMN_DONE:
 		h.issueState = STANDARD_ISSUE_STATE_COLUMN_DONE
 	default:
