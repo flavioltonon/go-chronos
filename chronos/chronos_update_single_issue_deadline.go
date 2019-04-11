@@ -3,10 +3,10 @@ package chronos
 import (
 	"context"
 	"encoding/json"
+	"flavioltonon/go-chronos/chronos/config/priority"
 	"math"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/flavioltonon/go-github/github"
@@ -15,14 +15,17 @@ import (
 
 type ChronosUpdateSingleIssueDeadlineRequest struct {
 	IssueNumber int
+	LabelID     int64
 	LabelName   string
 	Created     time.Time
 
 	client *github.Client
 
 	holidays     Holidays
-	elapsedTime  float64
-	nonWorkHours float64
+	elapsedTime  int
+	priority     priority.Priority
+	newDeadline  priority.Deadline
+	nonWorkHours int
 	timer        string
 	overdue      bool
 	timerLabel   string
@@ -58,17 +61,18 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) getHolidays() error {
 
 func (h *ChronosUpdateSingleIssueDeadlineRequest) calculateElapsedTime() error {
 	var (
-		nonWorkHours float64
-		weekendHours float64
-		holidayHours float64
+		nonWorkHours int
+		weekendHours int
+		holidayHours int
 	)
 
 	loc, _ := time.LoadLocation(STANDARD_TIME_LOCATION)
 	now := time.Now().In(loc)
 	created := h.Created.In(loc)
-	elapsedTime := int(math.Round(now.Sub(created).Hours()))
 
-	for t := 0; t < elapsedTime; t++ {
+	hoursElapsed := int(math.Round(now.Sub(created).Hours()))
+
+	for t := 0; t < hoursElapsed; t++ {
 		// Check if it is Sunday
 		if created.Add(time.Duration(t)*time.Hour).Weekday() == 0 {
 			weekendHours++
@@ -99,7 +103,7 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) calculateElapsedTime() error {
 		}
 	}
 
-	h.elapsedTime = now.Sub(created).Hours() - weekendHours - holidayHours
+	h.elapsedTime = hoursElapsed - weekendHours - holidayHours
 	h.nonWorkHours = nonWorkHours
 
 	return nil
@@ -107,62 +111,50 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) calculateElapsedTime() error {
 
 func (h *ChronosUpdateSingleIssueDeadlineRequest) defineNewDeadline() error {
 	var (
-		deadline           string
-		deducer            float64
-		deduceNonWorkHours bool
+		deadline priority.Deadline
+		t        = h.elapsedTime
 	)
 
-	timeTable := make(map[string]float64)
-	timeTable[DEADLINE_TYPE_HOURS] = h.elapsedTime - deducer*h.nonWorkHours
-	timeTable[DEADLINE_TYPE_DAYS] = (h.elapsedTime - deducer*h.nonWorkHours) / (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
+	p, exists := priority.NewPriority(h.LabelID)
+	if false == exists {
+		return ErrInvalidPriority
+	}
+	deadline = p.Deadline()
 
-	switch h.LabelName {
-	case PRIORITY_LABEL_PRIORITY_LOW:
-		deadline = DEADLINE_LABEL_PRIORITY_LOW
-		deduceNonWorkHours = true
-	case PRIORITY_LABEL_PRIORITY_MEDIUM:
-		deadline = DEADLINE_LABEL_PRIORITY_MEDIUM
-		deduceNonWorkHours = true
-	case PRIORITY_LABEL_PRIORITY_HIGH:
-		deadline = DEADLINE_LABEL_PRIORITY_HIGH
-		deduceNonWorkHours = true
-	case PRIORITY_LABEL_PRIORITY_VERY_HIGH:
-		deadline = DEADLINE_LABEL_PRIORITY_VERY_HIGH
-		deduceNonWorkHours = false
-	default:
-		return ErrUnableToDefineTimer
+	if deadline.DeduceNonWorkHours {
+		t -= h.nonWorkHours
 	}
 
-	if deduceNonWorkHours {
-		deducer = 1
-	} else {
-		deducer = 0
-	}
-
-	deadlineTime, _ := strconv.ParseFloat(strings.Split(deadline, " ")[1], 64)
-	deadlineType := strings.Split(deadline, " ")[2]
-	if deduceNonWorkHours && deadlineTime-timeTable[deadlineType] < 1 {
-		deadlineType = DEADLINE_TYPE_HOURS
-		deadlineTime = deadlineTime * (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
-	}
-
-	if timeTable[deadlineType] > deadlineTime {
+	if t < 0 {
 		h.overdue = true
+		return nil
 	}
 
-	h.timer = strconv.FormatFloat(deadlineTime-math.Round(timeTable[deadlineType]), 'f', -1, 64) + " " + deadlineType
+	if t <= 24 {
+		h.newDeadline = priority.Deadline{
+			Duration: t,
+			Unit:     DEADLINE_TYPE_HOURS,
+		}
+		return nil
+	}
+
+	if deadline.Unit == DEADLINE_TYPE_DAYS {
+		t /= WORK_HOURS_FINAL - WORK_HOURS_INITIAL
+	}
+
+	h.newDeadline = priority.Deadline{
+		Duration: t,
+		Unit:     deadline.Unit,
+	}
 
 	return nil
 }
 
 func (h *ChronosUpdateSingleIssueDeadlineRequest) prepareDeadlineLabel() error {
-	var (
-		labelName string
-	)
+	var labelName = DEADLINE_LABEL_OVERDUE
 
-	labelName = DEADLINE_LABEL_SIGNATURE + ": " + h.timer
-	if h.overdue {
-		labelName = DEADLINE_LABEL_OVERDUE
+	if false == h.overdue {
+		labelName = DEADLINE_LABEL_SIGNATURE + ": " + strconv.Itoa(h.newDeadline.Duration) + " " + h.newDeadline.Unit
 	}
 
 	color := SetColorToLabel(labelName)

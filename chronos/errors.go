@@ -3,6 +3,8 @@ package chronos
 import "errors"
 
 var (
+	ErrInvalidPriority = errors.New("invalid priority")
+
 	ErrNothingToUpdate = errors.New("nothing to update")
 
 	ErrUnableToSendGetLabelsFromIssueRequest       = errors.New("unable to send GetLabelsFromIssue request")

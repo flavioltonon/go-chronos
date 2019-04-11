@@ -1,6 +1,7 @@
 package chronos
 
 import (
+	"flavioltonon/go-chronos/chronos/config/priority"
 	"fmt"
 	"log"
 	"regexp"
@@ -17,10 +18,12 @@ func (chronos Chronos) HandleIssuesEvent(event interface{}) error {
 	case "labeled":
 		log.Println("Label:", issuesEvent.GetLabel().GetName())
 
-		for _, priority := range chronos.Priorities() {
-			if issuesEvent.GetLabel().GetID() == priority.ID {
+		// If an issue gets an priority label, it should have its deadline updated
+		for _, priority := range priority.Priorities() {
+			if issuesEvent.GetLabel().GetID() == priority.ID() {
 				chronos.SetRequest(ChronosUpdateSingleIssueDeadlineRequest{
 					IssueNumber: issuesEvent.GetIssue().GetNumber(),
+					LabelID:     issuesEvent.GetLabel().GetID(),
 					LabelName:   issuesEvent.GetLabel().GetName(),
 					Created:     issuesEvent.GetIssue().GetCreatedAt(),
 				})
@@ -73,8 +76,8 @@ func (chronos Chronos) HandleIssuesEvent(event interface{}) error {
 		// Reopened by Chronos
 		if issuesEvent.GetSender().GetID() == chronos.UserID() {
 			for _, label := range issuesEvent.GetIssue().Labels {
-				for _, priority := range chronos.Priorities() {
-					if label.GetID() == priority.ID {
+				for _, priority := range priority.Priorities() {
+					if label.GetID() == priority.ID() {
 						chronos.SetRequest(ChronosUpdateSingleIssueDeadlineRequest{
 							IssueNumber: issuesEvent.GetIssue().GetNumber(),
 							LabelName:   label.GetName(),

@@ -3,6 +3,7 @@ package chronos
 import (
 	"context"
 	"encoding/json"
+	"flavioltonon/go-chronos/chronos/config/priority"
 	"fmt"
 	"log"
 	"math"
@@ -22,11 +23,11 @@ type ChronosUpdateIssuesDeadlinesRequest struct {
 	issues []*github.Issue
 
 	holidays         Holidays
-	priorityLabel    string
-	deadlineLabel    string
+	priority         priority.Priority
+	currentDeadline  string
 	elapsedTime      int
 	nonWorkHours     int
-	deadline         string
+	newDeadline      priority.Deadline
 	newDeadlineLabel string
 	overdue          bool
 }
@@ -123,19 +124,19 @@ func (h *ChronosUpdateIssuesDeadlinesRequest) calculateElapsedTime() error {
 }
 
 func (h *ChronosUpdateIssuesDeadlinesRequest) findLabels() error {
-	h.deadlineLabel = ""
-	h.priorityLabel = ""
+	var hasPriorityLabel bool
 
 	for _, label := range h.issue.Labels {
 		if strings.Split(label.GetName(), ": ")[0] == DEADLINE_LABEL_SIGNATURE {
-			h.deadlineLabel = label.GetName()
+			h.currentDeadline = label.GetName()
+			continue
 		}
-		if strings.Split(label.GetName(), ": ")[0] == PRIORITY_LABEL_SIGNATURE {
-			h.priorityLabel = label.GetName()
+		if _, exists := priority.Priorities()[label.GetID()]; exists {
+			h.priority = priority.Priorities()[label.GetID()]
+			hasPriorityLabel = true
 		}
 	}
-
-	if h.priorityLabel == "" {
+	if false == hasPriorityLabel {
 		return ErrNothingToUpdate
 	}
 
@@ -144,60 +145,44 @@ func (h *ChronosUpdateIssuesDeadlinesRequest) findLabels() error {
 
 func (h *ChronosUpdateIssuesDeadlinesRequest) defineNewDeadline() error {
 	var (
-		deadline           string
-		deducer            int
-		deduceNonWorkHours bool
+		deadline = h.priority.Deadline()
+		t        = h.elapsedTime
 	)
 
-	timeTable := make(map[string]int)
-	timeTable[DEADLINE_TYPE_HOURS] = h.elapsedTime - deducer*h.nonWorkHours
-	timeTable[DEADLINE_TYPE_DAYS] = (h.elapsedTime - deducer*h.nonWorkHours) / (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
-
-	switch h.priorityLabel {
-	case PRIORITY_LABEL_PRIORITY_LOW:
-		deadline = DEADLINE_LABEL_PRIORITY_LOW
-		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORITY_LOW
-	case PRIORITY_LABEL_PRIORITY_MEDIUM:
-		deadline = DEADLINE_LABEL_PRIORITY_MEDIUM
-		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORITY_MEDIUM
-	case PRIORITY_LABEL_PRIORITY_HIGH:
-		deadline = DEADLINE_LABEL_PRIORITY_HIGH
-		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORITY_HIGH
-	case PRIORITY_LABEL_PRIORITY_VERY_HIGH:
-		deadline = DEADLINE_LABEL_PRIORITY_VERY_HIGH
-		deduceNonWorkHours = DEDUCE_NON_WORK_HOURS_PRIORITY_VERY_HIGH
-	default:
-		return ErrUnableToDefineTimer
+	if deadline.DeduceNonWorkHours {
+		t -= h.nonWorkHours
 	}
 
-	if deduceNonWorkHours {
-		deducer = 1
-	} else {
-		deducer = 0
-	}
-
-	deadlineTime, _ := strconv.Atoi(strings.Split(deadline, " ")[1])
-	deadlineType := strings.Split(deadline, " ")[2]
-	if deduceNonWorkHours && deadlineTime-timeTable[deadlineType] < 1 {
-		deadlineType = DEADLINE_TYPE_HOURS
-		deadlineTime = deadlineTime * (WORK_HOURS_FINAL - WORK_HOURS_INITIAL)
-	}
-
-	if timeTable[deadlineType] > deadlineTime {
+	if t < 0 {
 		h.overdue = true
+		return nil
 	}
 
-	h.deadline = strconv.Itoa(deadlineTime-timeTable[deadlineType]) + " " + deadlineType
+	if t <= 24 {
+		h.newDeadline = priority.Deadline{
+			Duration: t,
+			Unit:     DEADLINE_TYPE_HOURS,
+		}
+		return nil
+	}
+
+	if deadline.Unit == DEADLINE_TYPE_DAYS {
+		t /= WORK_HOURS_FINAL - WORK_HOURS_INITIAL
+	}
+
+	h.newDeadline = priority.Deadline{
+		Duration: t,
+		Unit:     deadline.Unit,
+	}
 
 	return nil
 }
 
 func (h *ChronosUpdateIssuesDeadlinesRequest) prepareDeadlineLabel() error {
-	var labelName string
+	var labelName = DEADLINE_LABEL_OVERDUE
 
-	labelName = DEADLINE_LABEL_SIGNATURE + ": " + h.deadline
-	if h.overdue {
-		labelName = DEADLINE_LABEL_OVERDUE
+	if false == h.overdue {
+		labelName = DEADLINE_LABEL_SIGNATURE + ": " + strconv.Itoa(h.newDeadline.Duration) + " " + h.newDeadline.Unit
 	}
 
 	color := SetColorToLabel(labelName)
@@ -232,13 +217,13 @@ func (h *ChronosUpdateIssuesDeadlinesRequest) updateDeadlineLabel() error {
 
 	for _, label := range labels {
 		if strings.Split(label.GetName(), ": ")[0] == DEADLINE_LABEL_SIGNATURE {
+			if label.GetName() == DEADLINE_LABEL_OVERDUE {
+				labelsNames = append(labelsNames, label.GetName())
+				continue
+			}
 			if strings.Split(label.GetName(), " ")[2] == DEADLINE_TYPE_DAYS || strings.Split(label.GetName(), " ")[2] == DEADLINE_TYPE_HOURS {
 				labelsNames = append(labelsNames, label.GetName())
 			}
-			continue
-		}
-		if label.GetName() == DEADLINE_LABEL_OVERDUE {
-			labelsNames = append(labelsNames, label.GetName())
 			continue
 		}
 	}

@@ -15,8 +15,8 @@ func (chronos Chronos) HandleProjectCardEvent(event interface{}) error {
 
 	switch projectCardEvent.GetAction() {
 	case "moved":
-		issueNumber, _ := strconv.Atoi(strings.Split(projectCardEvent.GetProjectCard().GetContentURL(), "/issues/")[1])
 		projectID, _ := strconv.ParseInt(strings.Split(projectCardEvent.GetProjectCard().GetProjectURL(), "/projects/")[1], 10, 64)
+		issueNumber, _ := strconv.Atoi(strings.Split(projectCardEvent.GetProjectCard().GetContentURL(), "/issues/")[1])
 
 		chronos.SetRequest(ChronosUpdateSingleIssueStatusRequest{
 			IssueNumber: issueNumber,
