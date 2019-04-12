@@ -6,10 +6,8 @@ import (
 	"github.com/flavioltonon/go-github/github"
 )
 
-func (chronos Chronos) HandleLabelEvent(event interface{}) error {
-	var labelEvent = event.(*github.LabelEvent)
-
-	fmt.Println(fmt.Sprintf("Event: Label %s has been %s", labelEvent.GetLabel().GetName(), labelEvent.GetAction()))
+func (chronos Chronos) HandleLabelEvent(event *github.LabelEvent) error {
+	fmt.Println(fmt.Sprintf("Event: Label %s has been %s", event.GetLabel().GetName(), event.GetAction()))
 
 	return nil
 }

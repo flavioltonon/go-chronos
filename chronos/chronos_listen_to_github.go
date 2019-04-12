@@ -10,16 +10,27 @@ import (
 )
 
 func (chronos *Chronos) ListenToGitHub(w http.ResponseWriter, r *http.Request) {
+	var (
+		event interface{}
+		err   error
+	)
+
+	defer func() {
+		defer r.Body.Close()
+		if err != nil {
+			log.Fatal(event, err)
+		}
+	}()
+
 	payload, err := github.ValidatePayload(r, []byte(os.Getenv("GITHUB_WEBHOOK_SECRET")))
 	if err != nil {
-		log.Println(fmt.Errorf("error validating request body: err=%s", err))
+		err = fmt.Errorf("error validating request body: err=%s", err)
 		return
 	}
-	defer r.Body.Close()
 
-	event, err := github.ParseWebHook(github.WebHookType(r), payload)
+	event, err = github.ParseWebHook(github.WebHookType(r), payload)
 	if err != nil {
-		log.Println(fmt.Errorf("could not parse webhook: err=%s", err))
+		err = fmt.Errorf("could not parse webhook: err=%s", err)
 		return
 	}
 
@@ -32,19 +43,14 @@ func (chronos *Chronos) ListenToGitHub(w http.ResponseWriter, r *http.Request) {
 
 	switch event.(type) {
 	case *github.IssuesEvent:
-		chronos.HandleIssuesEvent(event)
-		return
+		err = chronos.HandleIssuesEvent(event.(*github.IssuesEvent))
 	case *github.LabelEvent:
-		chronos.HandleLabelEvent(event)
-		return
+		err = chronos.HandleLabelEvent(event.(*github.LabelEvent))
 	case *github.ProjectCardEvent:
-		chronos.HandleProjectCardEvent(event)
-		return
+		err = chronos.HandleProjectCardEvent(event.(*github.ProjectCardEvent))
 	case *github.PingEvent:
-		chronos.HandlePingEvent(event)
-		return
+		err = chronos.HandlePingEvent(event.(*github.PingEvent))
 	default:
-		log.Println(fmt.Errorf("unknown event type %s", github.WebHookType(r)))
-		return
+		err = fmt.Errorf("unknown event type %s", github.WebHookType(r))
 	}
 }

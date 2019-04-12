@@ -6,8 +6,8 @@ import (
 	"github.com/flavioltonon/go-github/github"
 )
 
-func (chronos Chronos) HandlePingEvent(event interface{}) error {
-	var pingEvent = event.(*github.PingEvent)
-	fmt.Println("Event: Ping received.\nZen message:", pingEvent.GetZen())
+func (chronos Chronos) HandlePingEvent(event *github.PingEvent) error {
+	fmt.Println("Event: Ping received.\nZen message:", event.GetZen())
+
 	return nil
 }

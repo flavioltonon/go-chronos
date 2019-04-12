@@ -2,6 +2,7 @@ package chronos
 
 import (
 	"context"
+	"os"
 
 	"github.com/flavioltonon/go-github/github"
 )
@@ -17,9 +18,13 @@ type ChronosUpdateIssueResponse struct {
 }
 
 func (r ChronosUpdateIssueRequest) updateIssue() error {
-	_, _, err := r.client.Issues.Edit(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, r.IssueNumber, &github.IssueRequest{
-		State: &r.IssueState,
-	})
+	_, _, err := r.client.Issues.Edit(
+		context.Background(),
+		os.Getenv("GITHUB_REPOSITORY_OWNER"),
+		os.Getenv("GITHUB_REPOSITORY_NAME"),
+		r.IssueNumber, &github.IssueRequest{
+			State: &r.IssueState,
+		})
 	return err
 }
 

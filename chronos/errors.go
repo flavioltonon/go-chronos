@@ -3,6 +3,8 @@ package chronos
 import "errors"
 
 var (
+	ErrPriorityNotRegistered = errors.New("priority not registered")
+
 	ErrNothingToUpdate = errors.New("nothing to update")
 
 	ErrUnableToSendGetLabelsFromIssueRequest       = errors.New("unable to send GetLabelsFromIssue request")
@@ -20,6 +22,8 @@ var (
 	ErrUnableToReplaceLabelsFromIssue = errors.New("unable to replace labels from issue")
 
 	ErrUnableToDefineTimer = errors.New("unable to define timer from unexpected label")
+
+	ErrUnableToGetRepoProjects = errors.New("unable to get repo projects")
 
 	ErrUnableToGetIssue                  = errors.New("unable to get issue")
 	ErrUnableToUnmarshalGetIssueResponse = errors.New("unable to unmarshal GetIssue response")

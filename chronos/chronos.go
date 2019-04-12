@@ -11,7 +11,8 @@ type Chronos struct {
 	auth   github.BasicAuthTransport
 	client *github.Client
 
-	request interface{}
+	request  interface{}
+	response interface{}
 }
 
 func (h *Chronos) SetClient(client *github.Client) {
@@ -20,6 +21,10 @@ func (h *Chronos) SetClient(client *github.Client) {
 
 func (h *Chronos) SetRequest(request interface{}) {
 	h.request = request
+}
+
+func (h Chronos) Response() interface{} {
+	return h.response
 }
 
 func (h Chronos) UserID() int64 {

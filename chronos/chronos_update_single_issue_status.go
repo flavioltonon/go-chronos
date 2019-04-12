@@ -2,151 +2,41 @@ package chronos
 
 import (
 	"context"
-	"strings"
-	"sync"
+	"flavioltonon/go-chronos/chronos/config/column"
+	"os"
 
 	"github.com/flavioltonon/go-github/github"
 )
 
-type ChronosUpdateSingleIssueStatusRequest struct {
+type ChronosUpdateSingleIssueStateRequest struct {
 	IssueNumber int
 	ProjectID   int64
 	ColumnToID  int64
 
 	client *github.Client
 
-	columnsMap map[int64]string
-
 	issue *github.Issue
-
-	issueState       string
-	issueStatusLabel string
 }
 
-type ChronosUpdateSingleIssueStatusResponse struct {
-}
+type ChronosUpdateSingleIssueStateResponse struct{}
 
-func (h *ChronosUpdateSingleIssueStatusRequest) mapProjectColumns() error {
-	var err error
+func (h *ChronosUpdateSingleIssueStateRequest) updateIssueState() error {
+	var columns = column.Columns()
 
-	projectColumns, _, err := h.client.Projects.ListProjectColumns(context.Background(), h.ProjectID, nil)
-	if err != nil {
-		return ErrUnableToGetProjectColumns
-	}
-
-	columnsMap := make(map[int64]string)
-	for _, column := range projectColumns {
-		columnsMap[column.GetID()] = column.GetName()
-	}
-
-	h.columnsMap = columnsMap
-
-	return nil
-}
-
-func (h *ChronosUpdateSingleIssueStatusRequest) getIssue() error {
-	issue, _, err := h.client.Issues.Get(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.IssueNumber)
-	if err != nil {
-		return ErrUnableToGetIssue
-	}
-
-	h.issue = issue
-
-	return nil
-}
-
-func (h *ChronosUpdateSingleIssueStatusRequest) prepareStatusLabel() error {
-	switch h.columnsMap[h.ColumnToID] {
-	case COLUMN_BACKLOG:
-		h.issueState = STANDARD_ISSUE_STATE_COLUMN_BACKLOG
-	case COLUMN_SPRINT_BACKLOG:
-		h.issueState = STANDARD_ISSUE_STATE_COLUMN_SPRINT_BACKLOG
-	case COLUMN_ONGOING:
-		h.issueState = STANDARD_ISSUE_STATE_COLUMN_ONGOING
-	case COLUMN_PULL_REQUEST:
-		h.issueState = STANDARD_ISSUE_STATE_COLUMN_PULL_REQUEST
-		// h.issueStatusLabel = STATUS_LABEL_PULL_REQUEST
-	case COLUMN_SPRINT_DONE:
-		h.issueState = STANDARD_ISSUE_STATE_COLUMN_SPRINT_DONE
-	case COLUMN_DONE:
-		h.issueState = STANDARD_ISSUE_STATE_COLUMN_DONE
-	default:
+	if _, exists := columns[h.ColumnToID]; !exists {
 		return ErrUnexpectedProjectColumnName
 	}
 
-	// color := SetColorToLabel(h.issueStatusLabel)
-	// newLabel := &github.Label{
-	// 	Name:  &h.issueStatusLabel,
-	// 	Color: &color,
-	// }
+	issueState := columns[h.ColumnToID].StandardIssueState()
 
-	// if *newLabel.Name != "" {
-	// 	_, _, err := h.client.Issues.GetLabel(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.issueStatusLabel)
-	// 	if err != nil {
-	// 		_, _, err := h.client.Issues.CreateLabel(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, newLabel)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// }
-
-	return nil
-}
-
-func (h *ChronosUpdateSingleIssueStatusRequest) updateIssueStatusLabel() error {
-	var (
-		oldStatusLabels []string
-		wg              sync.WaitGroup
-		err             error
-	)
-
-	for _, label := range h.issue.Labels {
-		if strings.Split(label.GetName(), ": ")[0] == STATUS_LABEL_SIGNATURE {
-			oldStatusLabels = append(oldStatusLabels, label.GetName())
-		}
-	}
-
-	for _, label := range oldStatusLabels {
-		wg.Add(1)
-		go func(issueNumber int, label string) {
-			_, e := h.client.Issues.RemoveLabelForIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, issueNumber, label)
-			if e != nil {
-				err = ErrUnableToDeleteLabelsFromIssue
-				wg.Done()
-				return
-			}
-			wg.Done()
-		}(h.IssueNumber, label)
-	}
-	if err != nil {
-		return err
-	}
-
-	if h.issueStatusLabel == "" {
-		wg.Wait()
-		return nil
-	}
-
-	wg.Add(1)
-	go func(issueNumber int, newLabel string) {
-		_, _, e := h.client.Issues.AddLabelsToIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, issueNumber, []string{newLabel})
-		if e != nil {
-			err = ErrUnableToAddLabelsToIssue
-			wg.Done()
-			return
-		}
-		wg.Done()
-	}(h.IssueNumber, h.issueStatusLabel)
-
-	wg.Wait()
-
-	return nil
-}
-
-func (h *ChronosUpdateSingleIssueStatusRequest) updateIssueState() error {
-	_, _, err := h.client.Issues.Edit(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.IssueNumber, &github.IssueRequest{
-		State: &h.issueState,
-	})
+	_, _, err := h.client.Issues.Edit(
+		context.Background(),
+		os.Getenv("GITHUB_REPOSITORY_OWNER"),
+		os.Getenv("GITHUB_REPOSITORY_NAME"),
+		h.IssueNumber,
+		&github.IssueRequest{
+			State: &issueState,
+		})
 	if err != nil {
 		return ErrUnableToUpdateIssueState
 	}
@@ -154,33 +44,13 @@ func (h *ChronosUpdateSingleIssueStatusRequest) updateIssueState() error {
 	return nil
 }
 
-func (h Chronos) UpdateSingleIssueStatus() error {
+func (h Chronos) UpdateSingleIssueState() error {
 	var (
-		req = h.request.(ChronosUpdateSingleIssueStatusRequest)
+		req = h.request.(ChronosUpdateSingleIssueStateRequest)
 		err error
 	)
 
 	req.client = h.client
-
-	err = req.mapProjectColumns()
-	if err != nil {
-		return err
-	}
-
-	err = req.getIssue()
-	if err != nil {
-		return err
-	}
-
-	err = req.prepareStatusLabel()
-	if err != nil {
-		return err
-	}
-
-	// err = req.updateIssueStatusLabel()
-	// if err != nil {
-	// 	return err
-	// }
 
 	err = req.updateIssueState()
 	if err != nil {
