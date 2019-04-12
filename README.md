@@ -1,6 +1,7 @@
 # go-chronos
 
 ## Running
+- Download all dependencies: ```dep ensure```
 - Set all necessary environment variables, then run ```source configmap && source env```
 
 ### Variables:
