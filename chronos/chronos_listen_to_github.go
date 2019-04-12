@@ -32,16 +32,16 @@ func (chronos *Chronos) ListenToGitHub(w http.ResponseWriter, r *http.Request) {
 
 	switch event.(type) {
 	case *github.IssuesEvent:
-		log.Println(chronos.HandleIssuesEvent(event))
+		chronos.HandleIssuesEvent(event)
 		return
 	case *github.LabelEvent:
-		log.Println(chronos.HandleLabelEvent(event))
+		chronos.HandleLabelEvent(event)
 		return
 	case *github.ProjectCardEvent:
-		log.Println(chronos.HandleProjectCardEvent(event))
+		chronos.HandleProjectCardEvent(event)
 		return
 	case *github.PingEvent:
-		log.Println(chronos.HandlePingEvent(event))
+		chronos.HandlePingEvent(event)
 		return
 	default:
 		log.Println(fmt.Errorf("unknown event type %s", github.WebHookType(r)))

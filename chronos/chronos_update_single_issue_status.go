@@ -66,6 +66,8 @@ func (h *ChronosUpdateSingleIssueStatusRequest) prepareStatusLabel() error {
 	case COLUMN_PULL_REQUEST:
 		h.issueState = STANDARD_ISSUE_STATE_COLUMN_PULL_REQUEST
 		// h.issueStatusLabel = STATUS_LABEL_PULL_REQUEST
+	case COLUMN_SPRINT_DONE:
+		h.issueState = STANDARD_ISSUE_STATE_COLUMN_SPRINT_DONE
 	case COLUMN_DONE:
 		h.issueState = STANDARD_ISSUE_STATE_COLUMN_DONE
 	default:

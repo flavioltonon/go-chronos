@@ -37,7 +37,7 @@ func (chronos Chronos) HandleIssuesEvent(event interface{}) error {
 
 		if issuesEvent.GetSender().GetID() != chronos.UserID() {
 			// Remove deadline label added by human user
-			chronos.SetRequest(ChronosRelabelIssueRequest{
+			chronos.SetRequest(ChronosUnlabelIssueRequest{
 				IssueNumber: issuesEvent.GetIssue().GetNumber(),
 				LabelName:   issuesEvent.GetLabel().GetName(),
 			})
@@ -48,7 +48,8 @@ func (chronos Chronos) HandleIssuesEvent(event interface{}) error {
 	case "unlabeled":
 		log.Println("Label:", issuesEvent.GetLabel().GetName())
 
-		if regexp.MustCompile(DEADLINE_LABEL_SIGNATURE).MatchString(issuesEvent.GetLabel().GetName()) == false && regexp.MustCompile(PRIORITY_LABEL_SIGNATURE).MatchString(issuesEvent.GetLabel().GetName()) == false {
+		if regexp.MustCompile(DEADLINE_LABEL_SIGNATURE).MatchString(issuesEvent.GetLabel().GetName()) == false &&
+			regexp.MustCompile(PRIORITY_LABEL_SIGNATURE).MatchString(issuesEvent.GetLabel().GetName()) == false {
 			return nil
 		}
 

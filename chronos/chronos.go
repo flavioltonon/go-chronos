@@ -1,6 +1,11 @@
 package chronos
 
-import "github.com/flavioltonon/go-github/github"
+import (
+	"os"
+	"strconv"
+
+	"github.com/flavioltonon/go-github/github"
+)
 
 type Chronos struct {
 	auth   github.BasicAuthTransport
@@ -18,5 +23,9 @@ func (h *Chronos) SetRequest(request interface{}) {
 }
 
 func (h Chronos) UserID() int64 {
-	return CHRONOS_GITHUB_USER_ID
+	user, err := strconv.ParseInt(os.Getenv("CHRONOS_GITHUB_USER_ID"), 10, 64)
+	if err != nil {
+		panic("invalid CHRONOS_GITHUB_USER_ID")
+	}
+	return user
 }
