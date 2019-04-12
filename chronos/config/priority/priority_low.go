@@ -11,13 +11,12 @@ func (p PriorityLow) ID() int64 {
 }
 
 func (p PriorityLow) Name() string {
-	return PRIORITY_LABEL_PRIORITY_LOW
+	return "Priority: Low"
 }
 
 func (p PriorityLow) Deadline() Deadline {
 	return Deadline{
-		Duration:           60,
-		Unit:               DEADLINE_TYPE_DAYS,
-		DeduceNonWorkHours: DEDUCE_NON_WORK_HOURS_PRIORITY_LOW,
+		Duration: 60,
+		Unit:     "days",
 	}
 }

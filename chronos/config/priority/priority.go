@@ -13,9 +13,8 @@ type Priority interface {
 }
 
 type Deadline struct {
-	Duration           int
-	Unit               string
-	DeduceNonWorkHours bool
+	Duration int
+	Unit     string
 }
 
 var priorities = make(map[int64]Priority, 0)
@@ -24,7 +23,7 @@ func RegisterPriority(new Priority) {
 	vof := reflect.ValueOf(new)
 
 	if reflect.Ptr != vof.Kind() {
-		panic(errors.New("Registered document must be a pointer to struct"))
+		panic(errors.New("Registered priority must be a pointer to struct"))
 	}
 
 	if _, exists := priorities[new.ID()]; exists {

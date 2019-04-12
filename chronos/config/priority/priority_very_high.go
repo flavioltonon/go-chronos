@@ -11,13 +11,12 @@ func (p PriorityVeryHigh) ID() int64 {
 }
 
 func (p PriorityVeryHigh) Name() string {
-	return PRIORITY_LABEL_PRIORITY_VERY_HIGH
+	return "Priority: Very High"
 }
 
 func (p PriorityVeryHigh) Deadline() Deadline {
 	return Deadline{
-		Duration:           24,
-		Unit:               DEADLINE_TYPE_HOURS,
-		DeduceNonWorkHours: DEDUCE_NON_WORK_HOURS_PRIORITY_VERY_HIGH,
+		Duration: 24,
+		Unit:     "hours",
 	}
 }
