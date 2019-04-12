@@ -2,6 +2,7 @@ package chronos
 
 import (
 	"context"
+	"os"
 
 	"github.com/flavioltonon/go-github/github"
 )
@@ -17,7 +18,12 @@ type ChronosRelabelIssueResponse struct {
 }
 
 func (r ChronosRelabelIssueRequest) readdLabel() error {
-	_, _, err := r.client.Issues.AddLabelsToIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, r.IssueNumber, []string{r.LabelName})
+	_, _, err := r.client.Issues.AddLabelsToIssue(
+		context.Background(),
+		os.Getenv("GITHUB_REPOSITORY_OWNER"),
+		os.Getenv("GITHUB_REPOSITORY_NAME"),
+		r.IssueNumber, []string{r.LabelName},
+	)
 	return err
 }
 

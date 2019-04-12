@@ -8,23 +8,21 @@ import (
 	"github.com/flavioltonon/go-github/github"
 )
 
-func (chronos Chronos) HandleProjectCardEvent(event interface{}) error {
-	var projectCardEvent = event.(*github.ProjectCardEvent)
+func (chronos Chronos) HandleProjectCardEvent(event *github.ProjectCardEvent) error {
+	fmt.Println(fmt.Sprintf("Event: Project card #%d has been %s", event.GetProjectCard().GetID(), event.GetAction()))
 
-	fmt.Println(fmt.Sprintf("Event: Project card #%d has been %s", projectCardEvent.GetProjectCard().GetID(), projectCardEvent.GetAction()))
-
-	switch projectCardEvent.GetAction() {
+	switch event.GetAction() {
 	case "moved":
-		projectID, _ := strconv.ParseInt(strings.Split(projectCardEvent.GetProjectCard().GetProjectURL(), "/projects/")[1], 10, 64)
-		issueNumber, _ := strconv.Atoi(strings.Split(projectCardEvent.GetProjectCard().GetContentURL(), "/issues/")[1])
+		projectID, _ := strconv.ParseInt(strings.Split(event.GetProjectCard().GetProjectURL(), "/projects/")[1], 10, 64)
+		issueNumber, _ := strconv.Atoi(strings.Split(event.GetProjectCard().GetContentURL(), "/issues/")[1])
 
-		chronos.SetRequest(ChronosUpdateSingleIssueStatusRequest{
+		chronos.SetRequest(ChronosUpdateSingleIssueStateRequest{
 			IssueNumber: issueNumber,
 			ProjectID:   projectID,
-			ColumnToID:  projectCardEvent.GetProjectCard().GetColumnID(),
+			ColumnToID:  event.GetProjectCard().GetColumnID(),
 		})
 
-		return chronos.UpdateSingleIssueStatus()
+		return chronos.UpdateSingleIssueState()
 	default:
 		return nil
 	}

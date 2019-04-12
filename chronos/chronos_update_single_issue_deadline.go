@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flavioltonon/go-chronos/chronos/config/priority"
 	"math"
+	"os"
 	"regexp"
 	"strconv"
 	"time"
@@ -21,55 +22,48 @@ type ChronosUpdateSingleIssueDeadlineRequest struct {
 
 	client *github.Client
 
-	holidays     Holidays
-	elapsedTime  int
-	priority     priority.Priority
-	newDeadline  priority.Deadline
-	nonWorkHours int
-	timer        string
-	overdue      bool
-	timerLabel   string
+	holidays    Holidays
+	elapsedTime int
+	priority    priority.Priority
+	newDeadline priority.Deadline
+	timer       string
+	overdue     bool
+	timerLabel  string
 }
 
 type ChronosUpdateSingleIssueDeadlineResponse struct {
 }
 
 func (h *ChronosUpdateSingleIssueDeadlineRequest) getHolidays() error {
-	loc, _ := time.LoadLocation(STANDARD_TIME_LOCATION)
-	now := time.Now().In(loc)
-
-	query := map[string]string{
+	r, err := resty.R().SetQueryParams(map[string]string{
 		"country": "BR",
-		"year":    strconv.Itoa(now.Year()),
-	}
-
-	resp, err := resty.R().SetQueryParams(query).Get(HOLIDAY_API_URL)
+		"year":    strconv.Itoa(time.Now().Local().Year()),
+	}).Get(os.Getenv("HOLIDAY_API_URL"))
 	if err != nil {
 		return ErrUnableToSendGetHolidaysRequest
 	}
+	var resp holidaysResponse
 
-	var res holidaysResponse
-	err = json.Unmarshal(resp.Body(), &res)
+	err = json.Unmarshal(r.Body(), &resp)
 	if err != nil {
 		return ErrUnableToUnmarshalGetHolidaysResponse
 	}
 
-	h.holidays = res.Holidays
+	h.holidays = resp.Holidays
 
 	return nil
 }
 
 func (h *ChronosUpdateSingleIssueDeadlineRequest) calculateElapsedTime() error {
 	var (
-		nonWorkHours int
 		weekendHours int
 		holidayHours int
 	)
 
-	loc, _ := time.LoadLocation(STANDARD_TIME_LOCATION)
-	now := time.Now().In(loc)
-	created := h.Created.In(loc)
+	created := h.Created.Local()
+	now := time.Now().Local()
 
+	// Calculates the difference in hours between the issue creation date and the current time (round-up)
 	hoursElapsed := int(math.Round(now.Sub(created).Hours()))
 
 	for t := 0; t < hoursElapsed; t++ {
@@ -91,59 +85,44 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) calculateElapsedTime() error {
 			holidayHours++
 			continue
 		}
-
-		// Check if it is a work hour
-		if created.Add(time.Duration(t)*time.Hour).Hour() < WORK_HOURS_INITIAL {
-			nonWorkHours++
-			continue
-		}
-		if created.Add(time.Duration(t)*time.Hour).Hour() >= WORK_HOURS_FINAL {
-			nonWorkHours++
-			continue
-		}
 	}
 
 	h.elapsedTime = hoursElapsed - weekendHours - holidayHours
-	h.nonWorkHours = nonWorkHours
 
 	return nil
 }
 
 func (h *ChronosUpdateSingleIssueDeadlineRequest) defineNewDeadline() error {
-	var (
-		deadline priority.Deadline
-		t        = h.elapsedTime
-	)
-
 	p, exists := priority.NewPriority(h.LabelID)
 	if false == exists {
-		return ErrInvalidPriority
-	}
-	deadline = p.Deadline()
-
-	if deadline.DeduceNonWorkHours {
-		t -= h.nonWorkHours
+		return ErrPriorityNotRegistered
 	}
 
-	if t < 0 {
+	deadline := p.Deadline()
+	baseTime := deadline.Duration
+	if deadline.Unit == DEADLINE_TYPE_DAYS {
+		baseTime *= 24
+	}
+
+	delta := baseTime - h.elapsedTime
+	if delta <= 0 {
 		h.overdue = true
 		return nil
 	}
-
-	if t <= 24 {
+	if delta <= 24 {
 		h.newDeadline = priority.Deadline{
-			Duration: t,
+			Duration: delta,
 			Unit:     DEADLINE_TYPE_HOURS,
 		}
 		return nil
 	}
 
 	if deadline.Unit == DEADLINE_TYPE_DAYS {
-		t /= WORK_HOURS_FINAL - WORK_HOURS_INITIAL
+		delta /= 24
 	}
 
 	h.newDeadline = priority.Deadline{
-		Duration: t,
+		Duration: delta,
 		Unit:     deadline.Unit,
 	}
 
@@ -151,10 +130,17 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) defineNewDeadline() error {
 }
 
 func (h *ChronosUpdateSingleIssueDeadlineRequest) prepareDeadlineLabel() error {
-	var labelName = DEADLINE_LABEL_OVERDUE
+	var (
+		labelName     = DEADLINE_LABEL_OVERDUE
+		labelDuration = strconv.Itoa(h.newDeadline.Duration)
+		labelUnit     = h.newDeadline.Unit
+	)
 
+	if "1" == labelDuration {
+		labelUnit = labelUnit[:len(labelUnit)-1]
+	}
 	if false == h.overdue {
-		labelName = DEADLINE_LABEL_SIGNATURE + ": " + strconv.Itoa(h.newDeadline.Duration) + " " + h.newDeadline.Unit
+		labelName = DEADLINE_LABEL_SIGNATURE + ": " + labelDuration + " " + labelUnit
 	}
 
 	color := SetColorToLabel(labelName)
@@ -163,9 +149,19 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) prepareDeadlineLabel() error {
 		Color: &color,
 	}
 
-	_, _, err := h.client.Issues.GetLabel(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, labelName)
+	_, _, err := h.client.Issues.GetLabel(
+		context.Background(),
+		os.Getenv("GITHUB_REPOSITORY_OWNER"),
+		os.Getenv("GITHUB_REPOSITORY_NAME"),
+		labelName,
+	)
 	if err != nil {
-		_, _, err := h.client.Issues.CreateLabel(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, newLabel)
+		_, _, err := h.client.Issues.CreateLabel(
+			context.Background(),
+			os.Getenv("GITHUB_REPOSITORY_OWNER"),
+			os.Getenv("GITHUB_REPOSITORY_NAME"),
+			newLabel,
+		)
 		if err != nil {
 			return err
 		}
@@ -179,7 +175,13 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) prepareDeadlineLabel() error {
 func (h ChronosUpdateSingleIssueDeadlineRequest) updateDeadlineLabel() error {
 	var labelsNames = make([]string, 0)
 
-	labels, _, err := h.client.Issues.ListLabelsByIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.IssueNumber, nil)
+	labels, _, err := h.client.Issues.ListLabelsByIssue(
+		context.Background(),
+		os.Getenv("GITHUB_REPOSITORY_OWNER"),
+		os.Getenv("GITHUB_REPOSITORY_NAME"),
+		h.IssueNumber,
+		nil,
+	)
 	if err != nil {
 		return err
 	}
@@ -203,15 +205,18 @@ func (h ChronosUpdateSingleIssueDeadlineRequest) updateDeadlineLabel() error {
 		labelsNames = append(labelsNames, label.GetName())
 	}
 
-	_, _, e := h.client.Issues.ReplaceLabelsForIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, h.IssueNumber, labelsNames)
+	_, _, e := h.client.Issues.ReplaceLabelsForIssue(
+		context.Background(),
+		os.Getenv("GITHUB_REPOSITORY_OWNER"),
+		os.Getenv("GITHUB_REPOSITORY_NAME"),
+		h.IssueNumber,
+		labelsNames,
+	)
 	if e != nil {
 		return ErrUnableToReplaceLabelsFromIssue
 	}
-	if err != nil {
-		return err
-	}
 
-	return err
+	return nil
 }
 
 func (h Chronos) UpdateSingleIssueDeadline() error {

@@ -2,6 +2,7 @@ package chronos
 
 import (
 	"context"
+	"os"
 
 	"github.com/flavioltonon/go-github/github"
 )
@@ -17,7 +18,12 @@ type ChronosUnlabelIssueResponse struct {
 }
 
 func (r ChronosUnlabelIssueRequest) removeLabel() error {
-	_, err := r.client.Issues.RemoveLabelForIssue(context.Background(), GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY_NAME, r.IssueNumber, r.LabelName)
+	_, err := r.client.Issues.RemoveLabelForIssue(
+		context.Background(),
+		os.Getenv("GITHUB_REPOSITORY_OWNER"),
+		os.Getenv("GITHUB_REPOSITORY_NAME"),
+		r.IssueNumber, r.LabelName,
+	)
 	return err
 }
 
