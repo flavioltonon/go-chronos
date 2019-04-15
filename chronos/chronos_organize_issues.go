@@ -2,6 +2,7 @@ package chronos
 
 import (
 	"context"
+	"errors"
 	"flavioltonon/go-chronos/chronos/config/column"
 	"flavioltonon/go-chronos/chronos/config/priority"
 	"fmt"
@@ -23,6 +24,21 @@ type ChronosOrganizeIssuesRequest struct {
 }
 
 type ChronosOrganizeIssuesResponse struct{}
+
+var organizationStandardOptions = []string{
+	"priority",
+	"deadline",
+}
+
+func (r *ChronosOrganizeIssuesRequest) preCondition() error {
+	for _, option := range organizationStandardOptions {
+		if r.Option == option {
+			return nil
+		}
+	}
+
+	return errors.New(fmt.Sprintf("organization option not available:", r.Option))
+}
 
 func (r *ChronosOrganizeIssuesRequest) organize(cards []*github.ProjectCard) error {
 	var unorganizedCards = make([]Card, 0)
@@ -111,6 +127,11 @@ func (h *Chronos) OrganizeIssues() error {
 	var req = h.request.(ChronosOrganizeIssuesRequest)
 
 	req.client = h.client
+
+	err := req.preCondition()
+	if err != nil {
+		return err
+	}
 
 	var columns = column.Columns()
 	for _, column := range columns {
