@@ -31,6 +31,8 @@ var (
 	ErrUnableToGetIssuesFromRepo          = errors.New("unable to get issues from repository")
 	ErrUnableToUnmarshalGetIssuesResponse = errors.New("unable to unmarshal GetIssues response")
 
+	ErrUnableToGetIssueLabels = errors.New("unable to get issue labels")
+
 	ErrUnableToSendGetLabelRequest       = errors.New("unable to send GetLabel request")
 	ErrUnableToUnmarshalGetLabelResponse = errors.New("unable to unmarshal GetLabel response")
 

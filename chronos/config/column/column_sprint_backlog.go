@@ -14,6 +14,10 @@ func (p ColumnSprintBacklog) Name() string {
 	return "Sprint backlog"
 }
 
+func (p ColumnSprintBacklog) Project() int64 {
+	return 1908642
+}
+
 func (p ColumnSprintBacklog) StandardIssueState() string {
 	return "open"
 }

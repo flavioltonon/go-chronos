@@ -9,6 +9,7 @@ import (
 type Column interface {
 	ID() int64
 	Name() string
+	Project() int64
 	StandardIssueState() string
 }
 

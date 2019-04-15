@@ -9,6 +9,7 @@ import (
 type Priority interface {
 	ID() int64
 	Name() string
+	Level() int
 	Deadline() Deadline
 }
 

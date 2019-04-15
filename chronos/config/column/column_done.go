@@ -14,6 +14,10 @@ func (p ColumnDone) Name() string {
 	return "Done"
 }
 
+func (p ColumnDone) Project() int64 {
+	return 1908642
+}
+
 func (p ColumnDone) StandardIssueState() string {
 	return "closed"
 }

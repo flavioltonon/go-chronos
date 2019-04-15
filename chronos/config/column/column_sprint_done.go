@@ -14,6 +14,10 @@ func (p ColumnSprintDone) Name() string {
 	return "Sprint Done"
 }
 
+func (p ColumnSprintDone) Project() int64 {
+	return 1908642
+}
+
 func (p ColumnSprintDone) StandardIssueState() string {
 	return "closed"
 }

@@ -14,6 +14,10 @@ func (p PriorityLow) Name() string {
 	return "Priority: Low"
 }
 
+func (p PriorityLow) Level() int {
+	return 3
+}
+
 func (p PriorityLow) Deadline() Deadline {
 	return Deadline{
 		Duration: 60,
