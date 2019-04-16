@@ -22,7 +22,7 @@ func (chronos *Chronos) ListenToGitHub(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	payload, err := github.ValidatePayload(r, []byte(os.Getenv("GITHUB_WEBHOOK_SECRET")))
+	payload, err := github.ValidatePayload(r, []byte(os.Getenv("CHRONOS_GITHUB_WEBHOOK_SECRET")))
 	if err != nil {
 		err = fmt.Errorf("error validating request body: err=%s", err)
 		return

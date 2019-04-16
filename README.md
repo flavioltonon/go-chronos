@@ -8,7 +8,7 @@
 - CHRONOS_GITHUB_USER_ID: can be found by logging any kind of event made by the account designed to be used by Chronos
 - CHRONOS_GITHUB_LOGIN: Chronos's GitHub username/e-mail
 - CHRONOS_GITHUB_PASSWORD: Chronos's GitHub password
-- GITHUB_WEBHOOK_SECRET: webhook secret that has been configured in the settings of the project that will be handled by Chronos
+- CHRONOS_GITHUB_WEBHOOK_SECRET: webhook secret that has been configured in the settings of the project that will be handled by Chronos
 
 ### NGROK
 - Run ngrok at port 8080: ```ngrok.exe http 8080```
