@@ -4,7 +4,7 @@
 [[projects]]
   branch = "master"
   digest = "1:ce35ce0498adddbb52a1552588094c0ae9b803c1cfa3e95a58218006d0095d0f"
-  name = "flavioltonon/go-chronos"
+  name = "github.com/flavioltonon/go-chronos"
   packages = [
     "chronos/config/column",
     "chronos/config/priority",
@@ -74,8 +74,8 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "flavioltonon/go-chronos/config/column",
-    "flavioltonon/go-chronos/config/priority",
+    "github.com/flavioltonon/go-chronos/config/column",
+    "github.com/flavioltonon/go-chronos/config/priority",
     "github.com/flavioltonon/go-github/github",
     "github.com/go-resty/resty",
   ]
