@@ -3,7 +3,7 @@ package chronos
 import (
 	"context"
 	"encoding/json"
-	"github.com/flavioltonon/go-chronos/chronos/config/priority"
+	"flavioltonon/go-chronos/config/priority"
 	"math"
 	"os"
 	"regexp"

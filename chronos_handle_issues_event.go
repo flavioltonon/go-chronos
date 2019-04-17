@@ -1,7 +1,7 @@
 package chronos
 
 import (
-	"github.com/flavioltonon/go-chronos/chronos/config/priority"
+	"flavioltonon/go-chronos/config/priority"
 	"fmt"
 	"log"
 	"regexp"
