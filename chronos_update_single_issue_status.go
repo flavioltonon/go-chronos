@@ -2,7 +2,7 @@ package chronos
 
 import (
 	"context"
-	"flavioltonon/go-chronos/chronos/config/column"
+	"github.com/flavioltonon/go-chronos/chronos/config/column"
 	"os"
 
 	"github.com/flavioltonon/go-github/github"

@@ -3,8 +3,8 @@ package chronos
 import (
 	"context"
 	"errors"
-	"flavioltonon/go-chronos/chronos/config/column"
-	"flavioltonon/go-chronos/chronos/config/priority"
+	"github.com/flavioltonon/go-chronos/chronos/config/column"
+	"github.com/flavioltonon/go-chronos/chronos/config/priority"
 	"fmt"
 	"log"
 	"os"
