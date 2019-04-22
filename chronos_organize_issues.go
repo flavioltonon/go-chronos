@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/flavioltonon/go-github/github"
 )
@@ -104,6 +105,8 @@ func (r *ChronosOrganizeIssuesRequest) organize(cards []*github.ProjectCard) err
 				Position: "bottom",
 				ColumnID: card.GetColumnID(),
 			})
+
+			time.Sleep(7 * time.Second)
 		}
 	case "deadline":
 		var cardsByDeadline = CardsByDeadline(unorganizedCards)
@@ -115,6 +118,8 @@ func (r *ChronosOrganizeIssuesRequest) organize(cards []*github.ProjectCard) err
 				Position: "bottom",
 				ColumnID: card.GetColumnID(),
 			})
+
+			time.Sleep(7 * time.Second)
 		}
 	}
 
