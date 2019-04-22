@@ -10,8 +10,8 @@
   ]
   pruneopts = "UT"
   revision = "cd8c8e5df33044e96eb2c66b19176b8fdd1bab83"
-  version = "v1.1"
-
+  branch = "master"
+  
 [[projects]]
   digest = "1:790e0304833f1a9a0c04487a72fe686c198aab1dc2ad8e0acecd145d86051902"
   name = "github.com/flavioltonon/go-github"
