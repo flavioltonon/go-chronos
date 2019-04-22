@@ -1,4 +1,4 @@
-package config
+package chronos
 
 type ColumnOngoing struct{}
 
