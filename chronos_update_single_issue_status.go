@@ -2,8 +2,11 @@ package chronos
 
 import (
 	"context"
-	"github.com/flavioltonon/go-chronos/config/column"
+	"fmt"
+	"log"
 	"os"
+
+	"github.com/flavioltonon/go-chronos/config/column"
 
 	"github.com/flavioltonon/go-github/github"
 )
@@ -19,6 +22,20 @@ type ChronosUpdateSingleIssueStateRequest struct {
 }
 
 type ChronosUpdateSingleIssueStateResponse struct{}
+
+func (h *ChronosUpdateSingleIssueStateRequest) validate() error {
+	if h.IssueNumber == 0 {
+		return fmt.Errorf("invalid issue number: %v", h.IssueNumber)
+	}
+	if h.ProjectID == 0 {
+		return fmt.Errorf("invalid project ID: %v", h.ProjectID)
+	}
+	if h.ColumnToID == 0 {
+		return fmt.Errorf("invalid column-to ID: %v", h.ColumnToID)
+	}
+
+	return nil
+}
 
 func (h *ChronosUpdateSingleIssueStateRequest) updateIssueState() error {
 	var columns = column.Columns()
@@ -52,8 +69,15 @@ func (h Chronos) UpdateSingleIssueState() error {
 
 	req.client = h.client
 
+	err = req.validate()
+	if err != nil {
+		log.Println("failed to validate request:", h.request)
+		return err
+	}
+
 	err = req.updateIssueState()
 	if err != nil {
+		log.Println("failed to update issue state:", h.request)
 		return err
 	}
 
