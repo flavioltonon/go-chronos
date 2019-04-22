@@ -55,6 +55,7 @@ func (h *ChronosUpdateSingleIssueStateRequest) updateIssueState() error {
 			State: &issueState,
 		})
 	if err != nil {
+		log.Println("failed to edit issue:", err)
 		return ErrUnableToUpdateIssueState
 	}
 
