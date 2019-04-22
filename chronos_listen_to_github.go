@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/flavioltonon/go-chronos/config"
 	"github.com/flavioltonon/go-github/github"
 )
 

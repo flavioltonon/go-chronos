@@ -1,4 +1,4 @@
-package column
+package config
 
 type ColumnSprintDone struct{}
 
