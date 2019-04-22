@@ -6,8 +6,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/flavioltonon/go-chronos/config/column"
-
 	"github.com/flavioltonon/go-github/github"
 )
 
@@ -38,7 +36,7 @@ func (h *ChronosUpdateSingleIssueStateRequest) validate() error {
 }
 
 func (h *ChronosUpdateSingleIssueStateRequest) updateIssueState() error {
-	var columns = column.Columns()
+	var columns = Columns()
 
 	if _, exists := columns[h.ColumnToID]; !exists {
 		return ErrUnexpectedProjectColumnName

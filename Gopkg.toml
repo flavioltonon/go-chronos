@@ -26,10 +26,6 @@
 
 
 [[constraint]]
-  name = "github.com/flavioltonon/go-chronos"
-  branch = "master"
-
-[[constraint]]
   name = "github.com/flavioltonon/go-github"
   version = "19.0.1"
 

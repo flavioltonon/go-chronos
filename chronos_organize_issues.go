@@ -3,8 +3,6 @@ package chronos
 import (
 	"context"
 	"errors"
-	"github.com/flavioltonon/go-chronos/config/column"
-	"github.com/flavioltonon/go-chronos/config/priority"
 	"fmt"
 	"log"
 	"os"
@@ -83,12 +81,12 @@ func (r *ChronosOrganizeIssuesRequest) organize(cards []*github.ProjectCard) err
 			}
 
 			if regexp.MustCompile(PRIORITY_LABEL_SIGNATURE).MatchString(label.GetName()) {
-				if _, exists := priority.Priorities()[label.GetID()]; !exists {
+				if _, exists := Priorities()[label.GetID()]; !exists {
 					log.Println("priority label not registered:", label.GetName())
 					continue
 				}
 
-				newCard.PriorityLevel = priority.Priorities()[label.GetID()].Level()
+				newCard.PriorityLevel = Priorities()[label.GetID()].Level()
 			}
 		}
 
@@ -133,7 +131,7 @@ func (h *Chronos) OrganizeIssues() error {
 		return err
 	}
 
-	var columns = column.Columns()
+	var columns = Columns()
 	for _, column := range columns {
 		cards, _, err := h.client.Projects.ListProjectCards(
 			context.Background(),

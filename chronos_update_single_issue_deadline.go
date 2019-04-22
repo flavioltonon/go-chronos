@@ -3,7 +3,6 @@ package chronos
 import (
 	"context"
 	"encoding/json"
-	"github.com/flavioltonon/go-chronos/config/priority"
 	"math"
 	"os"
 	"regexp"
@@ -24,8 +23,8 @@ type ChronosUpdateSingleIssueDeadlineRequest struct {
 
 	holidays    Holidays
 	elapsedTime int
-	priority    priority.Priority
-	newDeadline priority.Deadline
+	priority    Priority
+	newDeadline Deadline
 	timer       string
 	overdue     bool
 	timerLabel  string
@@ -93,7 +92,7 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) calculateElapsedTime() error {
 }
 
 func (h *ChronosUpdateSingleIssueDeadlineRequest) defineNewDeadline() error {
-	p, exists := priority.NewPriority(h.LabelID)
+	p, exists := NewPriority(h.LabelID)
 	if false == exists {
 		return ErrPriorityNotRegistered
 	}
@@ -110,7 +109,7 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) defineNewDeadline() error {
 		return nil
 	}
 	if delta <= 24 {
-		h.newDeadline = priority.Deadline{
+		h.newDeadline = Deadline{
 			Duration: delta,
 			Unit:     DEADLINE_TYPE_HOURS,
 		}
@@ -121,7 +120,7 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) defineNewDeadline() error {
 		delta /= 24
 	}
 
-	h.newDeadline = priority.Deadline{
+	h.newDeadline = Deadline{
 		Duration: delta,
 		Unit:     deadline.Unit,
 	}
