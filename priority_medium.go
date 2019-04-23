@@ -7,7 +7,7 @@ func init() {
 }
 
 func (p PriorityMedium) ID() int64 {
-	return 1113350767
+	return 843114598
 }
 
 func (p PriorityMedium) Name() string {

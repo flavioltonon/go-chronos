@@ -7,7 +7,7 @@ func init() {
 }
 
 func (p PriorityHigh) ID() int64 {
-	return 1113351048
+	return 843088325
 }
 
 func (p PriorityHigh) Name() string {
