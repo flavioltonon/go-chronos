@@ -7,7 +7,7 @@ func init() {
 }
 
 func (p ColumnPullRequest) ID() int64 {
-	return 3719177
+	return 2244744
 }
 
 func (p ColumnPullRequest) Name() string {
@@ -15,7 +15,7 @@ func (p ColumnPullRequest) Name() string {
 }
 
 func (p ColumnPullRequest) Project() int64 {
-	return 1908642
+	return 1302676
 }
 
 func (p ColumnPullRequest) StandardIssueState() string {

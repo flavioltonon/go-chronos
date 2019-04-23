@@ -7,7 +7,7 @@ func init() {
 }
 
 func (p ColumnOngoing) ID() int64 {
-	return 5073004
+	return 2244699
 }
 
 func (p ColumnOngoing) Name() string {
@@ -15,7 +15,7 @@ func (p ColumnOngoing) Name() string {
 }
 
 func (p ColumnOngoing) Project() int64 {
-	return 1908642
+	return 1302676
 }
 
 func (p ColumnOngoing) StandardIssueState() string {

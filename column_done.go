@@ -7,7 +7,7 @@ func init() {
 }
 
 func (p ColumnDone) ID() int64 {
-	return 3731528
+	return 2244760
 }
 
 func (p ColumnDone) Name() string {
@@ -15,7 +15,7 @@ func (p ColumnDone) Name() string {
 }
 
 func (p ColumnDone) Project() int64 {
-	return 1908642
+	return 1302676
 }
 
 func (p ColumnDone) StandardIssueState() string {
