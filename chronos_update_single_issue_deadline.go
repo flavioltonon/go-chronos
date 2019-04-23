@@ -185,15 +185,15 @@ func (h ChronosUpdateSingleIssueDeadlineRequest) updateDeadlineLabel() error {
 		return err
 	}
 
-	labelsNames = append(labelsNames, h.LabelName)
-	labelsNames = append(labelsNames, h.timerLabel)
+	if h.LabelName != "" {
+		labelsNames = append(labelsNames, h.LabelName)
+	}
+	if h.timerLabel != "" {
+		labelsNames = append(labelsNames, h.timerLabel)
+	}
 
 	for _, label := range labels {
 		if regexp.MustCompile(DEADLINE_LABEL_SIGNATURE).MatchString(label.GetName()) {
-			continue
-		}
-
-		if label.GetName() == DEADLINE_LABEL_OVERDUE {
 			continue
 		}
 
@@ -226,24 +226,26 @@ func (h Chronos) UpdateSingleIssueDeadline() error {
 
 	req.client = h.client
 
-	err = req.getHolidays()
-	if err != nil {
-		return err
-	}
+	if req.LabelID != (PriorityNone{}).ID() {
+		err = req.getHolidays()
+		if err != nil {
+			return err
+		}
 
-	err = req.calculateElapsedTime()
-	if err != nil {
-		return err
-	}
+		err = req.calculateElapsedTime()
+		if err != nil {
+			return err
+		}
 
-	err = req.defineNewDeadline()
-	if err != nil {
-		return err
-	}
+		err = req.defineNewDeadline()
+		if err != nil {
+			return err
+		}
 
-	err = req.prepareDeadlineLabel()
-	if err != nil {
-		return err
+		err = req.prepareDeadlineLabel()
+		if err != nil {
+			return err
+		}
 	}
 
 	err = req.updateDeadlineLabel()

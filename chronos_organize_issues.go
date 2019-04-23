@@ -2,7 +2,6 @@ package chronos
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -36,7 +35,7 @@ func (r *ChronosOrganizeIssuesRequest) preCondition() error {
 		}
 	}
 
-	return errors.New(fmt.Sprintf("organization option not available:", r.Option))
+	return fmt.Errorf("organization option not available: %v", r.Option)
 }
 
 func (r *ChronosOrganizeIssuesRequest) organize(cards []*github.ProjectCard) error {
@@ -106,7 +105,7 @@ func (r *ChronosOrganizeIssuesRequest) organize(cards []*github.ProjectCard) err
 				ColumnID: card.GetColumnID(),
 			})
 
-			time.Sleep(7 * time.Second)
+			time.Sleep(10 * time.Second)
 		}
 	case "deadline":
 		var cardsByDeadline = CardsByDeadline(unorganizedCards)
@@ -119,7 +118,7 @@ func (r *ChronosOrganizeIssuesRequest) organize(cards []*github.ProjectCard) err
 				ColumnID: card.GetColumnID(),
 			})
 
-			time.Sleep(7 * time.Second)
+			time.Sleep(10 * time.Second)
 		}
 	}
 
@@ -138,6 +137,10 @@ func (h *Chronos) OrganizeIssues() error {
 
 	var columns = Columns()
 	for _, column := range columns {
+		if column.StandardIssueState() == "closed" {
+			continue
+		}
+
 		cards, _, err := h.client.Projects.ListProjectCards(
 			context.Background(),
 			column.ID(),
