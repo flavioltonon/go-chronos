@@ -21,11 +21,29 @@ type ChronosUpdateIssuesDeadlinesResponse struct {
 }
 
 func (h *ChronosUpdateIssuesDeadlinesRequest) getRepoIssues() error {
-	issues, _, err := h.client.Issues.ListByRepo(context.Background(), os.Getenv("GITHUB_REPOSITORY_OWNER"), os.Getenv("GITHUB_REPOSITORY_NAME"), &github.IssueListByRepoOptions{
-		State: "open",
-	})
-	if err != nil {
-		return ErrUnableToGetIssuesFromRepo
+	var issues = make([]*github.Issue, 0)
+
+	var lastPage = 1
+	for page := 1; page <= lastPage; page++ {
+		i, resp, err := h.client.Issues.ListByRepo(
+			context.Background(),
+			os.Getenv("GITHUB_REPOSITORY_OWNER"),
+			os.Getenv("GITHUB_REPOSITORY_NAME"),
+			&github.IssueListByRepoOptions{
+				State: "open",
+				ListOptions: github.ListOptions{
+					Page:    page,
+					PerPage: 30,
+				},
+			},
+		)
+		if err != nil {
+			return ErrUnableToGetIssuesFromRepo
+		}
+
+		lastPage = resp.LastPage
+
+		issues = append(issues, i...)
 	}
 
 	h.issues = issues

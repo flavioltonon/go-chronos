@@ -105,7 +105,7 @@ func (r *ChronosOrganizeIssuesRequest) organize(cards []*github.ProjectCard) err
 				ColumnID: card.GetColumnID(),
 			})
 
-			time.Sleep(10 * time.Second)
+			time.Sleep(7 * time.Second)
 		}
 	case "deadline":
 		var cardsByDeadline = CardsByDeadline(unorganizedCards)
@@ -118,7 +118,7 @@ func (r *ChronosOrganizeIssuesRequest) organize(cards []*github.ProjectCard) err
 				ColumnID: card.GetColumnID(),
 			})
 
-			time.Sleep(10 * time.Second)
+			time.Sleep(7 * time.Second)
 		}
 	}
 
@@ -141,19 +141,29 @@ func (h *Chronos) OrganizeIssues() error {
 			continue
 		}
 
-		cards, _, err := h.client.Projects.ListProjectCards(
-			context.Background(),
-			column.ID(),
-			&github.ProjectCardListOptions{},
-		)
-		if err != nil {
-			log.Println(fmt.Sprintf("unable to get project column %v cards", column.ID()))
-			continue
-		}
+		var lastPage = 1
+		for page := 1; page <= lastPage; page++ {
+			cards, resp, err := h.client.Projects.ListProjectCards(
+				context.Background(),
+				column.ID(),
+				&github.ProjectCardListOptions{
+					ListOptions: github.ListOptions{
+						Page:    page,
+						PerPage: 30,
+					},
+				},
+			)
+			if err != nil {
+				log.Println(fmt.Sprintf("unable to get project column %v cards", column.ID()))
+				continue
+			}
 
-		err = req.organize(cards)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("unable to organize column %v cards", column.ID()))
+			lastPage = resp.LastPage
+
+			err = req.organize(cards)
+			if err != nil {
+				log.Fatal(fmt.Sprintf("unable to organize column %v cards", column.ID()))
+			}
 		}
 	}
 
