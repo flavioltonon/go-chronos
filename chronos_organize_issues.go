@@ -93,6 +93,18 @@ func (r *ChronosOrganizeIssuesRequest) organize(cards []*github.ProjectCard) err
 		unorganizedCards = append(unorganizedCards, newCard)
 	}
 
+	var ordered bool
+	var lastPriorityLevel int
+	for _, card := range unorganizedCards {
+		if card.PriorityLevel < lastPriorityLevel {
+			ordered = false
+			break
+		}
+	}
+	if ordered {
+		return nil
+	}
+
 	switch r.Option {
 	case "priority":
 		var cardsByPriority = CardsByPriority(unorganizedCards)
@@ -141,9 +153,10 @@ func (h *Chronos) OrganizeIssues() error {
 			continue
 		}
 
+		var cards = make([]*github.ProjectCard, 0)
 		var lastPage = 1
 		for page := 1; page <= lastPage; page++ {
-			cards, resp, err := h.client.Projects.ListProjectCards(
+			c, resp, err := h.client.Projects.ListProjectCards(
 				context.Background(),
 				column.ID(),
 				&github.ProjectCardListOptions{
@@ -160,10 +173,12 @@ func (h *Chronos) OrganizeIssues() error {
 
 			lastPage = resp.LastPage
 
-			err = req.organize(cards)
-			if err != nil {
-				log.Fatal(fmt.Sprintf("unable to organize column %v cards", column.ID()))
-			}
+			cards = append(cards, c...)
+		}
+
+		err = req.organize(cards)
+		if err != nil {
+			log.Fatal(fmt.Sprintf("unable to organize column %v cards", column.ID()))
 		}
 	}
 
