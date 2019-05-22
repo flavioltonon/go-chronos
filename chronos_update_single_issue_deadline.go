@@ -2,7 +2,6 @@ package chronos
 
 import (
 	"context"
-	"encoding/json"
 	"math"
 	"os"
 	"regexp"
@@ -10,7 +9,6 @@ import (
 	"time"
 
 	"github.com/flavioltonon/go-github/github"
-	"github.com/go-resty/resty"
 )
 
 type ChronosUpdateSingleIssueDeadlineRequest struct {
@@ -21,7 +19,8 @@ type ChronosUpdateSingleIssueDeadlineRequest struct {
 
 	client *github.Client
 
-	holidays    Holidays
+	priorities map[int64]Priority
+
 	elapsedTime int
 	priority    Priority
 	newDeadline Deadline
@@ -31,26 +30,6 @@ type ChronosUpdateSingleIssueDeadlineRequest struct {
 }
 
 type ChronosUpdateSingleIssueDeadlineResponse struct {
-}
-
-func (h *ChronosUpdateSingleIssueDeadlineRequest) getHolidays() error {
-	r, err := resty.R().SetQueryParams(map[string]string{
-		"country": "BR",
-		"year":    strconv.Itoa(time.Now().Local().Year()),
-	}).Get(os.Getenv("HOLIDAY_API_URL"))
-	if err != nil {
-		return ErrUnableToSendGetHolidaysRequest
-	}
-	var resp holidaysResponse
-
-	err = json.Unmarshal(r.Body(), &resp)
-	if err != nil {
-		return ErrUnableToUnmarshalGetHolidaysResponse
-	}
-
-	h.holidays = resp.Holidays
-
-	return nil
 }
 
 func (h *ChronosUpdateSingleIssueDeadlineRequest) calculateElapsedTime() error {
@@ -79,7 +58,7 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) calculateElapsedTime() error {
 		}
 
 		// Check for holidays
-		_, exists := h.holidays[created.Add(time.Duration(t)*time.Hour).Format("2006-01-02")]
+		_, exists := holidays[created.Add(time.Duration(t)*time.Hour).Format("2006-01-02")]
 		if exists {
 			holidayHours++
 			continue
@@ -92,12 +71,9 @@ func (h *ChronosUpdateSingleIssueDeadlineRequest) calculateElapsedTime() error {
 }
 
 func (h *ChronosUpdateSingleIssueDeadlineRequest) defineNewDeadline() error {
-	p, exists := NewPriority(h.LabelID)
-	if false == exists {
-		return ErrPriorityNotRegistered
-	}
+	var priority = h.priorities[h.LabelID]
 
-	deadline := p.Deadline()
+	deadline := priority.Deadline
 	baseTime := deadline.Duration
 	if deadline.Unit == DEADLINE_TYPE_DAYS {
 		baseTime *= 24
@@ -225,13 +201,13 @@ func (h Chronos) UpdateSingleIssueDeadline() error {
 	)
 
 	req.client = h.client
+	req.priorities = h.priorities
 
-	if req.LabelID != (PriorityNone{}).ID() {
-		err = req.getHolidays()
-		if err != nil {
-			return err
-		}
+	if _, exists := h.priorities[req.LabelID]; !exists {
+		return nil
+	}
 
+	if h.priorities[req.LabelID].Deadline.Updatable == true {
 		err = req.calculateElapsedTime()
 		if err != nil {
 			return err

@@ -17,8 +17,9 @@ import (
 type ChronosOrganizeIssuesRequest struct {
 	Option string
 
-	client *github.Client
-	issues []*github.Issue
+	client     *github.Client
+	issues     []*github.Issue
+	priorities map[int64]Priority
 }
 
 type ChronosOrganizeIssuesResponse struct{}
@@ -81,12 +82,12 @@ func (r *ChronosOrganizeIssuesRequest) organize(cards []*github.ProjectCard) err
 			}
 
 			if regexp.MustCompile(PRIORITY_LABEL_SIGNATURE).MatchString(label.GetName()) {
-				if _, exists := Priorities()[label.GetID()]; !exists {
+				if _, exists := r.priorities[label.GetID()]; !exists {
 					log.Println("priority label not registered:", label.GetName())
 					continue
 				}
 
-				newCard.PriorityLevel = Priorities()[label.GetID()].Level()
+				newCard.PriorityLevel = r.priorities[label.GetID()].Level
 			}
 		}
 
@@ -141,15 +142,15 @@ func (h *Chronos) OrganizeIssues() error {
 	var req = h.request.(ChronosOrganizeIssuesRequest)
 
 	req.client = h.client
+	req.priorities = h.priorities
 
 	err := req.preCondition()
 	if err != nil {
 		return err
 	}
 
-	var columns = Columns()
-	for _, column := range columns {
-		if column.StandardIssueState() == "closed" {
+	for _, column := range h.columns {
+		if column.StandardIssueState == "closed" {
 			continue
 		}
 
@@ -158,7 +159,7 @@ func (h *Chronos) OrganizeIssues() error {
 		for page := 1; page <= lastPage; page++ {
 			c, resp, err := h.client.Projects.ListProjectCards(
 				context.Background(),
-				column.ID(),
+				column.ID,
 				&github.ProjectCardListOptions{
 					ListOptions: github.ListOptions{
 						Page:    page,
@@ -167,7 +168,7 @@ func (h *Chronos) OrganizeIssues() error {
 				},
 			)
 			if err != nil {
-				log.Println(fmt.Sprintf("unable to get project column %v cards", column.ID()))
+				log.Println(fmt.Sprintf("unable to get project column %v cards", column.ID))
 				continue
 			}
 
@@ -178,7 +179,7 @@ func (h *Chronos) OrganizeIssues() error {
 
 		err = req.organize(cards)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("unable to organize column %v cards", column.ID()))
+			log.Fatal(fmt.Sprintf("unable to organize column %v cards", column.ID))
 		}
 	}
 

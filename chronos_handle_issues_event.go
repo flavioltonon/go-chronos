@@ -21,7 +21,7 @@ func (chronos Chronos) HandleIssuesEvent(event *github.IssuesEvent) error {
 		}
 
 		// If an issue gets an priority label, it should have its deadline updated
-		if _, exists := Priorities()[event.GetLabel().GetID()]; exists {
+		if _, exists := chronos.priorities[event.GetLabel().GetID()]; exists {
 			chronos.SetRequest(ChronosUpdateSingleIssueDeadlineRequest{
 				IssueNumber: event.GetIssue().GetNumber(),
 				LabelID:     event.GetLabel().GetID(),
@@ -67,7 +67,7 @@ func (chronos Chronos) HandleIssuesEvent(event *github.IssuesEvent) error {
 		// Reopened by Chronos
 		if event.GetSender().GetID() == chronos.UserID() {
 			for _, label := range event.GetIssue().Labels {
-				if _, exists := Priorities()[label.GetID()]; exists {
+				if _, exists := chronos.priorities[label.GetID()]; exists {
 					chronos.SetRequest(ChronosUpdateSingleIssueDeadlineRequest{
 						IssueNumber: event.GetIssue().GetNumber(),
 						LabelID:     label.GetID(),

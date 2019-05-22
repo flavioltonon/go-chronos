@@ -14,9 +14,9 @@ type ChronosUpdateSingleIssueStateRequest struct {
 	ProjectID   int64
 	ColumnToID  int64
 
-	client *github.Client
-
-	issue *github.Issue
+	client  *github.Client
+	columns map[int64]Column
+	issue   *github.Issue
 }
 
 type ChronosUpdateSingleIssueStateResponse struct{}
@@ -36,13 +36,11 @@ func (h *ChronosUpdateSingleIssueStateRequest) validate() error {
 }
 
 func (h *ChronosUpdateSingleIssueStateRequest) updateIssueState() error {
-	var columns = Columns()
-
-	if _, exists := columns[h.ColumnToID]; !exists {
+	if _, exists := h.columns[h.ColumnToID]; !exists {
 		return ErrUnexpectedProjectColumnName
 	}
 
-	issueState := columns[h.ColumnToID].StandardIssueState()
+	issueState := h.columns[h.ColumnToID].StandardIssueState
 
 	_, _, err := h.client.Issues.Edit(
 		context.Background(),
@@ -67,6 +65,7 @@ func (h Chronos) UpdateSingleIssueState() error {
 	)
 
 	req.client = h.client
+	req.columns = h.columns
 
 	err = req.validate()
 	if err != nil {

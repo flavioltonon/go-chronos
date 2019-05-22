@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/flavioltonon/go-github/github"
 )
@@ -22,7 +24,7 @@ func (chronos *Chronos) ListenToGitHub(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	payload, err := github.ValidatePayload(r, []byte(os.Getenv("CHRONOS_GITHUB_WEBHOOK_SECRET")))
+	payload, err := github.ValidatePayload(r, []byte(os.Getenv("GITHUB_WEBHOOK_SECRET")))
 	if err != nil {
 		err = fmt.Errorf("error validating request body: err=%s", err)
 		return
@@ -35,11 +37,25 @@ func (chronos *Chronos) ListenToGitHub(w http.ResponseWriter, r *http.Request) {
 	}
 
 	auth := github.BasicAuthTransport{
-		Username: os.Getenv("CHRONOS_GITHUB_LOGIN"),
-		Password: os.Getenv("CHRONOS_GITHUB_PASSWORD"),
+		Username: os.Getenv("GITHUB_LOGIN"),
+		Password: os.Getenv("GITHUB_PASSWORD"),
 	}
 
 	chronos.SetClient(github.NewClient(auth.Client()))
+
+	if len(holidays) == 0 {
+		chronos.SetRequest(ChronosGetHolidaysRequest{
+			Country: os.Getenv("HOLIDAY_STANDARD_COUNTRY"),
+			Year:    strconv.Itoa(time.Now().Local().Year()),
+		})
+
+		resp, err := chronos.GetHolidays()
+		if err != nil {
+			log.Println("failed to get holidays")
+		}
+
+		holidays = resp.Holidays
+	}
 
 	switch event.(type) {
 	case *github.IssuesEvent:
